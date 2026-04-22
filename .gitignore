@@ -1,0 +1,238 @@
+# ============================================================================
+# .NET / C#
+# ============================================================================
+
+# Build outputs
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio / Rider / IDE caches
+.vs/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.userprefs
+*.DotSettings.user
+
+# Resharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+
+# Rider — ignorar estado personal, permitir config de proyecto
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/dictionaries/
+.idea/shelf/
+.idea/**/usage.statistics.xml
+.idea/**/dynamic.xml
+.idea/**/uiDesigner.xml
+.idea.*/
+*.iml
+
+# Test results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+*.VisualState.xml
+TestResult.xml
+[Cc]overage*/
+coverage*.json
+coverage*.xml
+coverage*.info
+
+# NuGet
+*.nupkg
+*.snupkg
+**/[Pp]ackages/*
+!**/[Pp]ackages/build/
+*.nuget.props
+*.nuget.targets
+.nuget/
+
+# MSBuild
+*.binlog
+
+# ============================================================================
+# Node.js / Frontend
+# ============================================================================
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# Build outputs
+dist/
+build/
+.next/
+.nuxt/
+.cache/
+.parcel-cache/
+out/
+.output/
+.vercel/
+.netlify/
+
+# Test / coverage
+coverage/
+.nyc_output/
+*.lcov
+
+# Vite / Turborepo
+.turbo/
+.vite/
+
+# ============================================================================
+# Variables de entorno y secretos
+# ============================================================================
+
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+!.env.example
+
+# Archivos con claves o tokens — extra paranoia
+*.pem
+*.key
+*.crt
+secrets/
+credentials/
+
+# ============================================================================
+# Logs y archivos temporales
+# ============================================================================
+
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+debug.log
+
+tmp/
+temp/
+*.tmp
+*.bak
+*.swp
+*.swo
+*~
+
+# ============================================================================
+# Docker
+# ============================================================================
+
+# Archivos de override local (si alguien usa docker-compose.override.yml privado)
+docker-compose.override.yml
+docker-compose.local.yml
+
+# Volúmenes persistidos localmente
+.docker-data/
+postgres-data/
+redis-data/
+
+# ============================================================================
+# Sistema operativo
+# ============================================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ============================================================================
+# IDE y editores
+# ============================================================================
+
+# VS Code — config compartida ya cubierta arriba
+
+# IntelliJ / Rider — ya cubierto arriba
+
+# Sublime
+*.sublime-workspace
+*.sublime-project
+
+# Vim / Neovim
+*.swp
+*.swo
+Session.vim
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+
+# ============================================================================
+# Otros
+# ============================================================================
+
+# Backups
+*.backup
+*.old
+
+# Paquetes comprimidos que no deberían estar en el repo
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+
+# Certificados SSL locales generados
+certs/
+*.pfx
+
+# Archivos de coverage locales para herramientas específicas
+.coverlet/
+TestResults/
+
+# JetBrains Rider specific — ya cubierto arriba
+
+# Claude Code workspace
+.claude/

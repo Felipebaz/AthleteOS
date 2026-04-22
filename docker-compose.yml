@@ -1,0 +1,157 @@
+# ============================================================================
+# AthleteOS — Infraestructura local para desarrollo
+# ============================================================================
+#
+# Levanta los servicios de infraestructura que la aplicación necesita para
+# correr localmente: PostgreSQL con TimescaleDB, Redis y MailHog para emails.
+#
+# Uso:
+#   docker compose up -d         levanta todo en background
+#   docker compose down          detiene y remueve containers (conserva datos)
+#   docker compose down -v       detiene y REMUEVE datos (cuidado)
+#   docker compose logs -f       tail de logs de todos los servicios
+#   docker compose ps            estado de los servicios
+#
+# Los datos persisten en volúmenes Docker nombrados. Si querés un reset total
+# en dev, `docker compose down -v` borra todo.
+# ============================================================================
+
+services:
+
+  # --------------------------------------------------------------------------
+  # PostgreSQL con TimescaleDB
+  # --------------------------------------------------------------------------
+  # Usamos la imagen oficial de TimescaleDB que incluye PostgreSQL + la extensión.
+  # TimescaleDB se habilita por schema en las migrations de la app.
+  # Para pgvector: lo agregamos en una migration con CREATE EXTENSION vector;
+  # (la imagen base lo incluye).
+  # --------------------------------------------------------------------------
+  postgres:
+    image: timescale/timescaledb-ha:pg16
+    container_name: athleteos-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-athleteos}
+      POSTGRES_USER: ${POSTGRES_USER:-athleteos}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-devpassword}
+      # Parametría conservadora para dev local.
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    ports:
+      # Exponemos al host para poder conectar con psql, DataGrip, etc.
+      # En prod esto NO se expone al exterior.
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/home/postgres/pgdata/data
+      # Scripts de inicialización que corren la PRIMERA vez que el volumen está vacío.
+      # Útil para crear schemas base, extensiones, etc.
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-athleteos} -d ${POSTGRES_DB:-athleteos}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - athleteos-network
+
+  # --------------------------------------------------------------------------
+  # Redis — cache + event bus MVP
+  # --------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: athleteos-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - athleteos-network
+
+  # --------------------------------------------------------------------------
+  # MailHog — captura de emails para testing en dev
+  # --------------------------------------------------------------------------
+  # No envía emails reales. Los captura y los muestra en una UI web.
+  # Perfecto para testear flujos de invitación, reset password, etc.
+  #
+  # SMTP:      localhost:1025
+  # UI web:    http://localhost:8025
+  # --------------------------------------------------------------------------
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: athleteos-mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # Web UI
+    networks:
+      - athleteos-network
+
+  # --------------------------------------------------------------------------
+  # (Opcional — comentado por default) MinIO como S3 local
+  # --------------------------------------------------------------------------
+  # Descomentar si querés usar object storage compatible con S3 en dev en vez
+  # de almacenamiento en disco local.
+  #
+  # UI web: http://localhost:9001 (usuario/pass abajo)
+  # Endpoint S3: http://localhost:9000
+  # --------------------------------------------------------------------------
+  # minio:
+  #   image: minio/minio:latest
+  #   container_name: athleteos-minio
+  #   restart: unless-stopped
+  #   command: server /data --console-address ":9001"
+  #   environment:
+  #     MINIO_ROOT_USER: minioadmin
+  #     MINIO_ROOT_PASSWORD: minioadmin
+  #   ports:
+  #     - "9000:9000"
+  #     - "9001:9001"
+  #   volumes:
+  #     - minio-data:/data
+  #   networks:
+  #     - athleteos-network
+
+  # --------------------------------------------------------------------------
+  # (Opcional — comentado) Adminer para inspeccionar la DB
+  # --------------------------------------------------------------------------
+  # UI web simple para browse de la DB. Útil si no tenés DataGrip/pgAdmin.
+  # http://localhost:8080
+  # --------------------------------------------------------------------------
+  # adminer:
+  #   image: adminer:latest
+  #   container_name: athleteos-adminer
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8080:8080"
+  #   networks:
+  #     - athleteos-network
+  #   depends_on:
+  #     - postgres
+
+
+# ============================================================================
+# Volúmenes nombrados — persisten los datos entre restart
+# ============================================================================
+volumes:
+  postgres-data:
+    name: athleteos-postgres-data
+  redis-data:
+    name: athleteos-redis-data
+  # minio-data:
+  #   name: athleteos-minio-data
+
+
+# ============================================================================
+# Red interna
+# ============================================================================
+networks:
+  athleteos-network:
+    name: athleteos-network
+    driver: bridge

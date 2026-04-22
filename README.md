@@ -1,146 +1,181 @@
-# Architecture Decision Records (ADRs)
+# AthleteOS
 
-Este directorio contiene las decisiones arquitectónicas importantes del proyecto, cada una documentada con su contexto, alternativas consideradas, decisión tomada y consecuencias aceptadas.
+> Plataforma SaaS de coaching inteligente para deportes de endurance.
+> Work in progress. Nombre de trabajo, sujeto a cambios.
 
-## ¿Qué es un ADR?
+## Qué es esto
 
-Un **Architecture Decision Record** es un documento corto (1-3 páginas) que captura una decisión técnica relevante en el momento en que se toma. Sirve para:
+Plataforma B2B que ayuda a coaches de running, ciclismo, triatlón y natación a gestionar atletas a distancia con asistencia de inteligencia artificial. Ingiere datos de wearables (Strava, Garmin, Polar), los analiza continuamente, y presenta al coach un dashboard priorizado con sugerencias accionables que el coach aprueba, modifica o rechaza.
 
-- Entender *por qué* el código es como es, meses o años después.
-- Evitar re-debatir decisiones ya tomadas ("¿por qué usamos PostgreSQL y no Mongo?").
-- Detectar cuándo una decisión ya no aplica porque el contexto cambió.
-- Onboarding rápido de nuevos colaboradores.
+**Usuario principal:** el coach. El atleta usa la app como consumidor, no como cliente pagante.
 
-El valor de un ADR está en escribirlo **cuando la decisión se toma**, no retroactivamente.
+**Estado actual:** Fase 1 — Fundaciones técnicas. Sin features de producto todavía.
 
-## Cuándo escribir un ADR
+## Documentación
 
-Escribir un ADR cuando la decisión:
+Toda la documentación técnica vive en el repo:
 
-- **Es difícil de revertir** (cambiar lenguaje, base de datos, patrón arquitectónico, proveedor crítico).
-- **Tiene consecuencias visibles en el código durante mucho tiempo** (patrones como CQRS, outbox, anticorruption layer).
-- **Involucra trade-offs significativos** donde otras personas podrían cuestionar la elección.
-- **Afecta a múltiples módulos o equipos**.
+| Archivo | Qué contiene |
+|---------|--------------|
+| [`CLAUDE.md`](./CLAUDE.md) | Briefing operativo para agentes de IA (Claude Code). |
+| [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) | Documento de arquitectura completo, 15 niveles. |
+| [`docs/adr/`](./docs/adr/) | Architecture Decision Records — decisiones formales. |
+| [`specs/`](./specs/) | Specs de features (Spec-Driven Development). |
 
-**No escribir un ADR** para decisiones reversibles de bajo impacto, estilos de código (eso va en el linter), o features de producto (eso va en backlog).
+**Por dónde empezar:**
 
-## Formato
+- Si sos un humano nuevo en el proyecto: leé este README, después `docs/ARCHITECTURE.md` niveles 1-5.
+- Si sos un agente de IA: leé `CLAUDE.md`. Te redirige a lo que necesitás.
+- Si venís a contribuir: leé [CONTRIBUTING.md](./CONTRIBUTING.md) (por escribir).
 
-Todos los ADRs siguen el template en `000-template.md`. Estructura:
+## Stack técnico (resumen)
 
-1. Metadata (fecha, estado, decididores).
-2. Contexto y problema.
-3. Fuerzas en tensión.
-4. Alternativas consideradas.
-5. Decisión.
-6. Consecuencias (positivas, negativas, neutrales).
-7. Cuándo reevaluar.
-8. Referencias.
+**Backend:** C# / .NET 8 + ASP.NET Core + EF Core + PostgreSQL + TimescaleDB + Redis.
+**Frontend:** React + TypeScript + Vite + TanStack + Tailwind.
+**IA:** Anthropic Claude.
+**Infra:** Docker + GitHub Actions + Railway/Fly.io (MVP) → AWS (escala).
 
-## Estados posibles
+Detalle completo en `docs/ARCHITECTURE.md` nivel 13.
 
-- **Propuesto:** en discusión, todavía no implementado.
-- **Aceptado:** decidido e implementado (o en implementación).
-- **Deprecado:** ya no aplica pero se conserva por historia.
-- **Reemplazado por ADR-NNNN:** superado por una decisión posterior (link al nuevo).
+## Requisitos para desarrollo local
 
-## Convenciones de nombrado
+- **.NET 8 SDK** — [descargar](https://dotnet.microsoft.com/download/dotnet/8.0)
+- **Node.js 20+ y pnpm 9+** — recomendado via [Volta](https://volta.sh/) o [fnm](https://github.com/Schniz/fnm)
+- **Docker Desktop** (o Docker Engine + Compose plugin en Linux)
+- **Git**
+- Editor de código: VS Code + C# Dev Kit (gratis), Rider, o similar
 
-`NNNN-titulo-kebab-case.md`
+## Setup local
 
-- `NNNN` = número secuencial con padding de ceros (0001, 0002, ..., 0123).
-- Título corto, descriptivo, en español, kebab-case.
-- Nunca reutilizar números, aunque un ADR sea deprecado.
+### 1. Cloná el repo
 
-Ejemplos: `0001-monolito-modular.md`, `0007-postgresql-como-db-principal.md`.
+```bash
+git clone <url-del-repo>
+cd athleteos
+```
 
-## Índice de ADRs
+### 2. Copiá el archivo de variables de entorno
 
-### Aceptados
+```bash
+cp .env.example .env
+```
 
-| # | Título | Fecha | Estado |
-|---|--------|-------|--------|
-| [0001](./0001-monolito-modular.md) | Monolito modular sobre microservicios | 2026-04-22 | Aceptado |
+Editá `.env` si necesitás personalizar algo. Para desarrollo local, los defaults deberían funcionar.
 
-### Propuestos (en discusión)
+### 3. Levantá los servicios de infraestructura
 
-_(ninguno todavía)_
+```bash
+docker compose up -d
+```
 
-### Deprecados
+Esto levanta PostgreSQL (con TimescaleDB), Redis y un MailHog local para testing de emails. Verificá con:
 
-_(ninguno todavía)_
+```bash
+docker compose ps
+```
 
-## ADRs previstos a escribir
+### 4. Aplicá las migraciones de la base de datos
 
-Lista de decisiones importantes que van a tomarse y documentarse a medida que el proyecto avance. **No escribir estos preventivamente**: escribirlos cuando la decisión se tome realmente, con contexto real.
+```bash
+# (Disponible cuando exista el Bloque 2)
+dotnet run --project src/Bootstrap/ApiHost -- migrate
+```
 
-### Fase de fundaciones técnicas
+### 5. Corré la API
 
-- **ADR-0002:** Clean Architecture con nomenclatura estándar + mapping a Mousqués.
-- **ADR-0003:** PostgreSQL + TimescaleDB como stack de datos principal.
-- **ADR-0004:** Multi-tenancy por fila con Row Level Security.
-- **ADR-0005:** Outbox pattern para eventos de integración.
-- **ADR-0006:** Strongly-typed IDs en el dominio.
-- **ADR-0007:** Autenticación: ASP.NET Core Identity vs. Clerk vs. Auth0 (a decidir).
-- **ADR-0008:** Estrategia de testing (MSTest + Testcontainers + cobertura por capa).
+```bash
+# (Disponible cuando exista el Bloque 2)
+dotnet run --project src/Bootstrap/ApiHost
+```
 
-### Fase de ingesta y procesamiento
+La API queda corriendo en `http://localhost:5000`. Swagger UI en `http://localhost:5000/swagger`.
 
-- **ADR-0009:** Anticorruption Layer por proveedor externo (Strava, Garmin, etc.).
-- **ADR-0010:** Manejo de tokens OAuth (cifrado a nivel aplicación + rotación).
-- **ADR-0011:** TimescaleDB vs. almacenamiento columnar para streams de actividad.
-- **ADR-0012:** Estrategia de reintentos y dead letter queue para sincronizaciones.
+### 6. (Opcional) Corré los frontends
 
-### Fase de inteligencia
+```bash
+# (Disponible cuando exista el Bloque 4)
+cd frontends
+pnpm install
+pnpm dev
+```
 
-- **ADR-0013:** Abstracción `IInsightGenerator` para desacoplar del proveedor LLM.
-- **ADR-0014:** Structured outputs y validación de respuestas de LLM.
-- **ADR-0015:** Versionado de prompts como artefacto de código.
-- **ADR-0016:** Coach-in-the-loop como requisito no negociable.
-- **ADR-0017:** Caching de respuestas de LLM para control de costos.
+El dashboard del coach queda en `http://localhost:5173`, la PWA del atleta en `http://localhost:5174`.
 
-### Fase de producto
+## Estructura del repo
 
-- **ADR-0018:** PWA sobre React Native para la app del atleta (MVP).
-- **ADR-0019:** Monorepo con pnpm + Turborepo para frontends.
-- **ADR-0020:** Generación de cliente API tipado desde OpenAPI.
-- **ADR-0021:** BFF pattern para separar concerns de web (coach) y mobile (atleta).
+```
+athleteos/
+├── CLAUDE.md                    Briefing para agentes de IA
+├── README.md                    Este archivo
+├── .env.example                 Template de variables de entorno
+├── .gitignore
+├── .editorconfig                Convenciones de edición
+├── docker-compose.yml           Servicios de infraestructura local
+├── docs/
+│   ├── ARCHITECTURE.md          Arquitectura (15 niveles)
+│   └── adr/                     Decisiones arquitectónicas
+├── specs/                       Specs de features
+├── src/                         Código del backend (.NET)
+│   ├── BuildingBlocks/
+│   ├── Modules/
+│   ├── Bootstrap/
+│   └── Workers/
+├── frontends/                   Monorepo de frontends (por crear)
+│   ├── apps/
+│   └── packages/
+├── tests/                       Tests del backend
+└── .github/
+    └── workflows/               CI/CD (GitHub Actions)
+```
 
-### Fase de infraestructura y operación
+## Cómo correr los tests
 
-- **ADR-0022:** Railway/Fly.io como PaaS inicial, migración a AWS/Azure como siguiente paso.
-- **ADR-0023:** GitHub Actions para CI/CD con gates manuales a producción.
-- **ADR-0024:** Gitflow como estrategia de branching.
-- **ADR-0025:** Conventional Commits en español.
-- **ADR-0026:** Stack de observabilidad (Serilog + OpenTelemetry + Sentry).
-- **ADR-0027:** Estrategia de backups y test de restore.
+```bash
+# Backend completo
+dotnet test
 
-### Fase comercial
+# Solo unit tests
+dotnet test --filter Category=Unit
 
-- **ADR-0028:** Stripe + MercadoPago como gateway de pagos.
-- **ADR-0029:** Modelo de pricing por tiers basados en atletas gestionados.
-- **ADR-0030:** Data retention policy y compliance con ley 18.331 / GDPR.
+# Solo un módulo
+dotnet test tests/Modules/Coaching.UnitTests
 
-Esta lista es orientativa y va a cambiar a medida que el proyecto evolucione. Algunos ADRs previstos pueden no llegar a escribirse porque la decisión se resuelve trivialmente; otros aparecerán porque surgieron problemas no anticipados.
+# Frontend (cuando exista)
+cd frontends && pnpm test
+```
 
-## Proceso para escribir un ADR nuevo
+## Comandos útiles del día a día
 
-1. Copiar `000-template.md` a `NNNN-titulo.md` con el siguiente número disponible.
-2. Completar secciones en orden: contexto → alternativas → decisión → consecuencias.
-3. Marcar estado inicial como `Propuesto` si necesita discusión, `Aceptado` si ya está decidido.
-4. Agregar al índice de este README.
-5. Commitear con mensaje `docs(adr): agregar ADR-NNNN sobre <tema>`.
-6. Si la decisión afecta a `CLAUDE.md` o `docs/ARCHITECTURE.md`, actualizar esos archivos en el mismo PR.
+| Comando | Qué hace |
+|---------|----------|
+| `docker compose up -d` | Levanta infra local |
+| `docker compose down` | Detiene infra local |
+| `docker compose logs -f postgres` | Logs de PostgreSQL |
+| `dotnet build` | Compila la solución |
+| `dotnet test` | Corre todos los tests |
+| `dotnet format` | Formatea el código |
+| `pnpm dev` | Arranca frontends en modo dev |
 
-## Cuándo deprecar un ADR
+## Convenciones
 
-Si una decisión documentada ya no aplica:
+- **Commits:** Conventional Commits en español. Ej: `feat(coaching): agregar ajuste de semana`.
+- **Branches:** Gitflow adaptado. `main` es prod, `develop` es dev, features en `feature/*`.
+- **Código:** inglés siempre. Comentarios y docs en español o inglés consistente.
+- **Tests:** obligatorios para nuevo código en Domain y Application.
 
-1. Cambiar estado a `Deprecado` o `Reemplazado por ADR-NNNN`.
-2. Agregar sección al final explicando por qué.
-3. Si fue reemplazado, linkear al nuevo ADR (bidireccionalmente).
-4. **No borrar el ADR viejo.** La historia importa.
+## Reglas importantes
 
----
+1. **Nunca commitear secretos.** Usamos `.env.local` (en `.gitignore`) y vault en cloud.
+2. **Nunca mergear directo a `main` ni a `develop`.** Siempre vía PR.
+3. **Features nuevas requieren spec antes de código** (ver `docs/adr/0002-sdd-sobre-ddd.md`).
+4. **Cambios arquitectónicos requieren ADR.**
 
-*Los ADRs son contratos con el futuro. Tomalos en serio, pero no dejes que se vuelvan burocracia. El objetivo es claridad, no documentación defensiva.*
+## Soporte y contacto
+
+Proyecto en fase temprana, mantenido por [Felipe](https://github.com/<tu-usuario>).
+
+Para bugs, issues o propuestas: abrí un issue en este repo.
+
+## Licencia
+
+Por definir. Hasta tener decisión formal, el código es propietario y no se permite redistribución.
