@@ -1,0 +1,90 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <!-- ── Application framework ───────────────────────────────────────── -->
+  <ItemGroup Label="MediatR">
+    <PackageVersion Include="MediatR" Version="12.4.1" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup Label="Validation">
+    <PackageVersion Include="FluentValidation" Version="11.11.0" />
+    <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
+  </ItemGroup>
+
+  <!-- ── EF Core + PostgreSQL ────────────────────────────────────────── -->
+  <ItemGroup Label="EF Core">
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.0" />
+    <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
+  </ItemGroup>
+
+  <!-- ── Background jobs ─────────────────────────────────────────────── -->
+  <ItemGroup Label="Hangfire">
+    <PackageVersion Include="Hangfire.Core" Version="1.8.17" />
+    <PackageVersion Include="Hangfire.AspNetCore" Version="1.8.17" />
+    <PackageVersion Include="Hangfire.PostgreSql" Version="1.20.10" />
+  </ItemGroup>
+
+  <!-- ── Observability ───────────────────────────────────────────────── -->
+  <ItemGroup Label="Logging">
+    <PackageVersion Include="Serilog.AspNetCore" Version="9.0.0" />
+    <PackageVersion Include="Serilog.Sinks.Console" Version="6.0.0" />
+    <PackageVersion Include="Serilog.Sinks.File" Version="6.0.0" />
+    <PackageVersion Include="Serilog.Enrichers.Environment" Version="3.0.0" />
+    <PackageVersion Include="Serilog.Enrichers.Thread" Version="4.0.0" />
+  </ItemGroup>
+
+  <ItemGroup Label="OpenTelemetry">
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.11.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.11.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.11.0" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.11.0" />
+  </ItemGroup>
+
+  <ItemGroup Label="ErrorTracking">
+    <PackageVersion Include="Sentry.AspNetCore" Version="5.0.0" />
+  </ItemGroup>
+
+  <!-- ── API ─────────────────────────────────────────────────────────── -->
+  <ItemGroup Label="API">
+    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
+    <PackageVersion Include="Scalar.AspNetCore" Version="2.3.4" />
+  </ItemGroup>
+
+  <!-- ── HTTP clients ────────────────────────────────────────────────── -->
+  <ItemGroup Label="HTTP">
+    <PackageVersion Include="Refit" Version="8.0.0" />
+    <PackageVersion Include="Refit.HttpClientFactory" Version="8.0.0" />
+  </ItemGroup>
+
+  <!-- ── Mapping ─────────────────────────────────────────────────────── -->
+  <ItemGroup Label="Mapping">
+    <PackageVersion Include="Riok.Mapperly" Version="4.1.1" />
+  </ItemGroup>
+
+  <!-- ── AI / LLM ────────────────────────────────────────────────────── -->
+  <ItemGroup Label="AI">
+    <PackageVersion Include="Anthropic.SDK" Version="3.8.0" />
+  </ItemGroup>
+
+  <!-- ── Testing ─────────────────────────────────────────────────────── -->
+  <ItemGroup Label="Testing">
+    <PackageVersion Include="MSTest.TestFramework" Version="3.7.0" />
+    <PackageVersion Include="MSTest.TestAdapter" Version="3.7.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
+    <PackageVersion Include="FluentAssertions" Version="8.0.1" />
+    <PackageVersion Include="NSubstitute" Version="5.3.0" />
+    <PackageVersion Include="NSubstitute.Analyzers.CSharp" Version="1.0.17" />
+    <PackageVersion Include="Testcontainers.PostgreSql" Version="4.1.0" />
+    <PackageVersion Include="Bogus" Version="35.6.1" />
+  </ItemGroup>
+
+  <!-- ── Architecture tests ──────────────────────────────────────────── -->
+  <ItemGroup Label="ArchTests">
+    <PackageVersion Include="NetArchTest.Rules" Version="1.3.2" />
+  </ItemGroup>
+</Project>

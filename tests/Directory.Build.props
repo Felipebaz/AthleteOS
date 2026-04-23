@@ -1,0 +1,6 @@
+<Project>
+  <!-- Override root config: keep warnings as warnings in test projects -->
+  <PropertyGroup>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+</Project>

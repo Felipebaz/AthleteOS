@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>AthleteOS.BuildingBlocks.Domain</RootNamespace>
+  </PropertyGroup>
+  <!-- No external package references. Pure domain — System.* only. -->
+</Project>
