@@ -1,160 +1,160 @@
-# ADR-001: Monolito modular sobre microservicios
+# ADR-001: Modular Monolith over Microservices
 
-- **Fecha:** 2026-04-22
-- **Estado:** Aceptado
-- **Decididores:** Felipe
-- **Contexto técnico relacionado:** `docs/ARCHITECTURE.md` niveles 5 (Bounded Contexts), 6 (Vista de despliegue), 10 (Módulos del backend).
+- **Date:** 2026-04-22
+- **Status:** Accepted
+- **Deciders:** Felipe
+- **Related technical context:** `docs/ARCHITECTURE.md` levels 5 (Bounded Contexts), 6 (Deployment view), 10 (Backend modules).
 
-## Contexto y problema
+## Context and problem
 
-El sistema modela un dominio con múltiples bounded contexts claramente diferenciados (Identity, Athlete Profile, Training Data, Coaching, Intelligence, Communication, eventualmente Billing). La existencia de fronteras naturales hace tentador implementar cada contexto como un microservicio independiente desde el inicio, siguiendo patrones populares de arquitecturas modernas.
+The system models a domain with multiple clearly differentiated bounded contexts (Identity, Athlete Profile, Training Data, Coaching, Intelligence, Communication, eventually Billing). The existence of natural boundaries makes it tempting to implement each context as an independent microservice from the start, following popular modern architecture patterns.
 
-Sin embargo, existen restricciones reales que hacen esta decisión no trivial:
+However, real constraints make this decision non-trivial:
 
-1. **Equipo de una sola persona** en la fase inicial (el founder). Operar múltiples servicios, coordinar deploys, gestionar fallos distribuidos y debuggear problemas cross-servicio supera ampliamente la capacidad operativa de un solo dev.
-2. **Fase de validación de producto:** el dominio va a evolucionar significativamente en los primeros 6-12 meses. Las fronteras entre contextos que hoy parecen claras podrían cambiar a medida que entendamos mejor el problema real. Microservicios cristalizan fronteras prematuramente.
-3. **Presupuesto acotado:** microservicios multiplican costos de infraestructura (múltiples instancias, networking, observabilidad distribuida, mensajería inter-servicio).
-4. **Complejidad operativa:** transacciones distribuidas, sagas, consistencia eventual entre servicios, tracing distribuido, deploys coordinados, versionado de APIs internas.
-5. **Requisitos de consistencia:** varias operaciones críticas (matcheo actividad-sesión, cálculo de carga, aplicación de sugerencia) se benefician fuertemente de transacciones locales dentro de un único proceso.
+1. **Single-person team** in the initial phase (the founder). Operating multiple services, coordinating deploys, managing distributed failures and debugging cross-service problems far exceeds the operational capacity of a single dev.
+2. **Product validation phase:** the domain will evolve significantly in the first 6-12 months. The boundaries between contexts that seem clear today could change as we better understand the real problem. Microservices prematurely crystallize boundaries.
+3. **Limited budget:** microservices multiply infrastructure costs (multiple instances, networking, distributed observability, inter-service messaging).
+4. **Operational complexity:** distributed transactions, sagas, eventual consistency between services, distributed tracing, coordinated deploys, internal API versioning.
+5. **Consistency requirements:** several critical operations (activity-session matching, load calculation, suggestion application) strongly benefit from local transactions within a single process.
 
-Al mismo tiempo, necesitamos que la arquitectura **no cierre la puerta** a extraer servicios en el futuro si algún contexto necesita escalar independientemente, ser reescrito en otro lenguaje (ej. Intelligence en Python/ML-heavy), o ser operado por un equipo dedicado cuando crezcamos.
+At the same time, we need the architecture to **not close the door** to extracting services in the future if a specific context needs to scale independently, be rewritten in another language (e.g. Intelligence in Python/ML-heavy), or be operated by a dedicated team when we grow.
 
-## Fuerzas en tensión
+## Forces in tension
 
-- **Simplicidad operativa hoy** vs. **flexibilidad de escala futura**.
-- **Velocidad de iteración** (dominio evolutivo) vs. **disciplina de fronteras** (prevenir acoplamiento).
-- **Costos operativos bajos** vs. **separación de concerns infraestructural**.
-- **Consistencia transaccional fuerte** (dentro de un contexto) vs. **independencia de deploy** (entre contextos).
-- **Onboarding de futuros devs con stack familiar** vs. **libertad tecnológica por servicio**.
+- **Operational simplicity today** vs. **future scaling flexibility**.
+- **Iteration speed** (evolutionary domain) vs. **boundary discipline** (preventing coupling).
+- **Low operational costs** vs. **infrastructural separation of concerns**.
+- **Strong transactional consistency** (within a context) vs. **independent deploy** (between contexts).
+- **Easy onboarding of future devs with familiar stack** vs. **technological freedom per service**.
 
-## Alternativas consideradas
+## Alternatives considered
 
-### Alternativa 1: Microservicios desde el día uno
+### Alternative 1: Microservices from day one
 
-Cada bounded context como servicio independiente, con su propia DB, API, deploy y stack potencialmente distinto. Comunicación via HTTP/gRPC + mensajería asincrónica.
-
-**Pros:**
-- Escalamiento independiente por contexto.
-- Fallos aislados.
-- Libertad tecnológica por servicio.
-- Fronteras físicas fuerzan disciplina.
-
-**Contras:**
-- Complejidad operativa desproporcionada para 1 dev.
-- Costo de infra multiplicado (instancias, load balancers, service mesh, observabilidad distribuida).
-- Transacciones distribuidas requieren sagas / orquestación compleja.
-- Refactorizar dominio es muchísimo más caro (implica cambiar APIs, deploys coordinados, migraciones en múltiples DBs).
-- Debug de flujos cross-servicio es notablemente más difícil.
-- Riesgo alto de *distributed monolith*: microservicios acoplados sin los beneficios.
-
-**Por qué no:** el costo operativo y de desarrollo supera ampliamente los beneficios en esta fase. Es una optimización prematura clásica que mató muchos proyectos early-stage.
-
-### Alternativa 2: Monolito tradicional (sin modularización fuerte)
-
-Una solución única con capas técnicas (Controllers, Services, Repositories) pero sin separación explícita por bounded context. Todo convive en el mismo código, todas las clases pueden referenciar todas las demás.
+Each bounded context as an independent service, with its own DB, API, deploy and potentially different stack. Communication via HTTP/gRPC + asynchronous messaging.
 
 **Pros:**
-- Máxima velocidad inicial.
-- Simplicidad extrema.
-- Cero complejidad operativa.
-- Todo en una transacción.
+- Independent scaling per context.
+- Isolated failures.
+- Technological freedom per service.
+- Physical boundaries enforce discipline.
 
-**Contras:**
-- Acoplamiento descontrolado a medida que el código crece.
-- Fronteras de dominio se erosionan; el lenguaje ubicuo se contamina.
-- Imposible extraer un servicio en el futuro sin reescritura profunda.
-- Refactors dolorosos porque todo toca todo.
-- No aprovecha la claridad del DDD que ya tenemos identificada.
+**Cons:**
+- Operational complexity disproportionate for 1 dev.
+- Multiplied infra cost (instances, load balancers, service mesh, distributed observability).
+- Distributed transactions require sagas / complex orchestration.
+- Refactoring the domain is much more expensive (implies changing APIs, coordinated deploys, migrations in multiple DBs).
+- Debugging cross-service flows is notably harder.
+- High risk of *distributed monolith*: coupled microservices without the benefits.
 
-**Por qué no:** desperdicia la ventaja de haber hecho análisis de dominio. A medida que el proyecto crece (y el objetivo es que crezca), el acoplamiento se vuelve ingobernable. Y al no haber fronteras internas, el costo de eventualmente extraer servicios es enorme.
+**Why not:** the operational and development cost far exceeds the benefits at this stage. It's a classic premature optimization that killed many early-stage projects.
 
-### Alternativa 3: Monolito modular
+### Alternative 2: Traditional monolith (without strong modularization)
 
-Una única solución desplegable, pero con separación estricta por bounded context: cada módulo tiene su propio proyecto, su propio schema de DB, sus propios casos de uso, y solo se comunica con otros módulos via (a) integration events asincrónicos o (b) interfaces públicas explícitas (contratos).
-
-**Pros:**
-- Simplicidad operativa de monolito.
-- Fronteras internas explícitas, verificables por code review y eventualmente por análisis estático.
-- Disciplina arquitectónica sin costo distribuido.
-- Refactoring del dominio barato mientras todo vive en el mismo proceso.
-- Transacciones locales dentro de un módulo (que es donde las necesitamos).
-- Camino de evolución claro: extraer módulo a microservicio cuando haya justificación.
-- Se alinea perfecto con DDD estratégico.
-
-**Contras:**
-- Requiere disciplina para respetar fronteras (no hay separación física que las fuerce).
-- Escalar requiere escalar todo el monolito (todos los módulos suben y bajan juntos).
-- Un bug en un módulo puede tumbar todo el proceso.
-- Una base de datos compartida (aunque con schemas separados) tiene acoplamiento operativo (migraciones, backups, límites de conexión).
-
-### Alternativa 4: Microservicios selectivos (híbrido)
-
-Monolito principal + algunos servicios extraídos desde el inicio (ej. AI worker como servicio Python separado).
+A single solution with technical layers (Controllers, Services, Repositories) but without explicit separation by bounded context. Everything lives in the same code, all classes can reference all others.
 
 **Pros:**
-- Flexibilidad tecnológica donde importa (ML/IA en Python).
-- Menos servicios que microservicios puros.
+- Maximum initial speed.
+- Extreme simplicity.
+- Zero operational complexity.
+- Everything in one transaction.
 
-**Contras:**
-- Complejidad operativa sigue siendo significativa.
-- Decidir qué extraer hoy implica suponer qué va a necesitar escalar en el futuro.
-- Para un dev solo, aún son dos cosas distintas que operar.
+**Cons:**
+- Uncontrolled coupling as the code grows.
+- Domain boundaries erode; ubiquitous language gets contaminated.
+- Impossible to extract a service in the future without deep rewrite.
+- Painful refactors because everything touches everything.
+- Doesn't leverage the DDD clarity we've already identified.
 
-**Por qué no ahora:** defensible como evolución futura (extraer AI worker a Python cuando los modelos propios lo justifiquen), pero no como punto de partida.
+**Why not:** wastes the advantage of having done domain analysis. As the project grows (and the goal is that it grows), coupling becomes ungovernable. And without internal boundaries, the cost of eventually extracting services is enormous.
 
-## Decisión
+### Alternative 3: Modular monolith
 
-**Construir el sistema como monolito modular, con un proyecto .NET por bounded context, schemas de base de datos separados por contexto, y comunicación inter-módulo exclusivamente via integration events asincrónicos o public contracts.**
+A single deployable solution, but with strict separation by bounded context: each module has its own project, its own DB schema, its own use cases, and only communicates with other modules via (a) asynchronous integration events or (b) explicit public interfaces (contracts).
 
-La estructura de carpetas y la regla de "módulos no se referencian entre sí en código" están documentadas en `docs/ARCHITECTURE.md` nivel 10 y en `CLAUDE.md`.
+**Pros:**
+- Monolith operational simplicity.
+- Explicit internal boundaries, verifiable by code review and eventually by static analysis.
+- Architectural discipline without distributed cost.
+- Cheap domain refactoring while everything lives in the same process.
+- Local transactions within a module (which is where we need them).
+- Clear evolution path: extract module to microservice when there's justification.
+- Aligns perfectly with strategic DDD.
 
-Los workers asincrónicos (SyncWorker, AnalysisWorker, AIWorker, etc.) son procesos separados pero comparten el mismo código base y las mismas librerías de módulo. Son "facetas" del mismo monolito con distintos puntos de entrada.
+**Cons:**
+- Requires discipline to respect boundaries (there's no physical separation to enforce them).
+- Scaling requires scaling the entire monolith (all modules go up and down together).
+- A bug in one module can bring down the entire process.
+- A shared database (though with separate schemas) has operational coupling (migrations, backups, connection limits).
 
-Esta decisión se toma reconociendo que los trade-offs son correctos para la fase actual (1 dev, validación de producto, dominio evolutivo), no como una posición ideológica. Si las condiciones cambian significativamente, esta decisión se reevalúa.
+### Alternative 4: Selective microservices (hybrid)
 
-## Consecuencias
+Main monolith + some services extracted from the start (e.g. AI worker as a separate Python service).
 
-### Positivas
+**Pros:**
+- Technological flexibility where it matters (ML/AI in Python).
+- Fewer services than pure microservices.
 
-- **Operabilidad viable para un solo dev.** Un proceso principal + pool de workers es manejable. Un incidente de producción es debuggeable en un terminal.
-- **Costos iniciales de infraestructura bajos.** Menos de 100 USD/mes soporta el MVP completo.
-- **Dominio refactorable.** Mover código entre módulos es una operación de IDE, no un proyecto de migración.
-- **Transacciones locales donde se necesitan.** Aplicar una sugerencia de IA al plan es atómico dentro del módulo Coaching.
-- **Fronteras internas explícitas.** La disciplina de "módulos no se referencian directamente" fuerza un diseño limpio y prepara el terreno para extraer servicios cuando haga falta.
-- **Onboarding simple.** Un dev nuevo clona un repo, levanta Docker Compose, y tiene todo funcionando en minutos.
-- **Historia técnica potente para el portfolio.** "Monolito modular con DDD, outbox pattern, eventos integrados, preparado para microservicios" es una narrativa madura que diferencia el proyecto.
+**Cons:**
+- Operational complexity is still significant.
+- Deciding what to extract today implies guessing what will need to scale in the future.
+- For a single dev, it's still two different things to operate.
 
-### Negativas / Trade-offs aceptados
+**Why not now:** defensible as future evolution (extract AI worker to Python when own models justify it), but not as a starting point.
 
-- **Disciplina dependiente del dev.** Las fronteras entre módulos no están forzadas por red ni por proceso. Un `using` indebido entre módulos compila. Mitigación: linting custom + code review + tests de arquitectura (usando NetArchTest o similar).
-- **Escalamiento uniforme.** Si Intelligence (CPU-intensivo por LLMs) necesita más recursos, toda la aplicación escala con él. Mitigación: los workers están separados del API, así que se puede escalar el AnalysisWorker sin tocar el API.
-- **Fallo compartido.** Un bug de memoria en Coaching tumba también Identity. Mitigación: manejo robusto de errores, circuit breakers en llamadas externas, supervisión.
-- **Base de datos compartida.** Aunque con schemas separados, una migration mal hecha o una query pesada afecta a otros contextos. Mitigación: limits de conexión por módulo, query timeouts, aislamiento con RLS.
-- **Tentación de atajos.** Es fácil "solo esta vez" romper la regla y hacer un query cross-schema o un `using` cross-módulo. Mitigación: reglas claras en CLAUDE.md + tests de arquitectura + review.
+## Decision
 
-### Neutrales
+**Build the system as a modular monolith, with one .NET project per layer per bounded context, separate database schemas per context, and inter-module communication exclusively via asynchronous integration events or public contracts.**
 
-- La estructura de carpetas es más elaborada que un monolito tradicional, pero más simple que microservicios.
-- El outbox pattern y el event bus son necesarios incluso en monolito modular (para comunicación inter-módulo robusta). Esto es overhead que no tendría un monolito tradicional, pero es infraestructura que se paga una sola vez.
+The folder structure and the rule "modules don't reference each other in code" are documented in `docs/ARCHITECTURE.md` level 10 and in `CLAUDE.md`.
 
-## Cuándo reevaluar esta decisión
+Async workers (SyncWorker, AnalysisWorker, AIWorker, etc.) are separate processes but share the same codebase and module libraries. They are "facets" of the same monolith with different entry points.
 
-Esta decisión se revisa si se cumple alguna de estas condiciones:
+This decision is made recognizing that the trade-offs are correct for the current phase (1 dev, product validation, evolutionary domain), not as an ideological position. If conditions change significantly, this decision is revisited.
 
-1. **Escala de equipo:** más de 5-8 developers trabajando activamente en el código. La coordinación en un monolito se vuelve fricción.
-2. **Escala de carga:** un contexto específico (probablemente Intelligence) requiere tecnología o escalamiento fundamentalmente distinto del resto (ej. necesitamos Python + GPUs para modelos propios).
-3. **Fronteras estables:** el dominio se estabiliza y las fronteras no cambian por 6+ meses. Desaparece el argumento de "dominio evolutivo".
-4. **Problemas de disponibilidad:** un bug en un módulo tumba frecuentemente el sistema completo, y el costo de esto supera el costo operativo de separar.
-5. **Requisitos de compliance:** algún cliente enterprise exige aislamiento físico de sus datos o su procesamiento.
-6. **Madurez operativa:** tenemos SRE, observabilidad distribuida avanzada, y experiencia operando sistemas distribuidos.
+## Consequences
 
-El primer candidato a extracción, cuando llegue el momento, probablemente sea **Intelligence** (por razones de stack ML y escalamiento de LLMs). El segundo candidato razonable es **TrainingData** (por volumen de ingesta y necesidad de throughput dedicado).
+### Positive
 
-## Referencias
+- **Viable operability for a single dev.** One main process + pool of workers is manageable. A production incident is debuggable in one terminal.
+- **Low initial infrastructure costs.** Less than 100 USD/month supports the full MVP.
+- **Refactorable domain.** Moving code between modules is an IDE operation, not a migration project.
+- **Local transactions where needed.** Applying an AI suggestion to the plan is atomic within the Coaching module.
+- **Explicit internal boundaries.** The discipline of "modules don't reference each other directly" forces clean design and prepares the ground for extracting services when needed.
+- **Simple onboarding.** A new dev clones a repo, starts Docker Compose, and has everything running in minutes.
+- **Strong technical story for the portfolio.** "Modular monolith with DDD, outbox pattern, integrated events, ready for microservices" is a mature narrative that differentiates the project.
 
-- *Building Microservices* — Sam Newman (capítulos sobre cuándo NO hacer microservicios).
-- *Monolith to Microservices* — Sam Newman (el camino de evolución desde monolito).
-- *Implementing Domain-Driven Design* — Vaughn Vernon (bounded contexts como fronteras de servicio).
-- Modular Monolith: A Primer — Kamil Grzybek (serie de artículos de referencia).
-- *.NET Microservices: Architecture for Containerized .NET Applications* — Microsoft (libro gratuito, capítulo sobre monolito modular).
-- `docs/ARCHITECTURE.md` nivel 4 (Principios arquitectónicos, en particular P8: "Diseñado para un dev hoy, extensible a equipo de 10 mañana").
+### Negative / Accepted trade-offs
+
+- **Discipline dependent on the dev.** Module boundaries between modules are not enforced by network or process. An improper `using` between modules compiles. Mitigation: custom linting + code review + architecture tests (using NetArchTest or similar).
+- **Uniform scaling.** If Intelligence (CPU-intensive due to LLMs) needs more resources, the entire application scales with it. Mitigation: workers are separate from the API, so AnalysisWorker can be scaled without touching the API.
+- **Shared failure.** A memory bug in Coaching also brings down Identity. Mitigation: robust error handling, circuit breakers on external calls, supervision.
+- **Shared database.** Though with separate schemas, a badly written migration or a heavy query affects other contexts. Mitigation: connection limits per module, query timeouts, isolation with RLS.
+- **Temptation for shortcuts.** It's easy to "just this once" break the rule and do a cross-schema query or a cross-module `using`. Mitigation: clear rules in CLAUDE.md + architecture tests + review.
+
+### Neutral
+
+- The folder structure is more elaborate than a traditional monolith, but simpler than microservices.
+- The outbox pattern and the event bus are necessary even in a modular monolith (for robust inter-module communication). This is overhead that a traditional monolith wouldn't have, but it's infrastructure paid once.
+
+## When to revisit this decision
+
+This decision is reviewed if any of these conditions are met:
+
+1. **Team scale:** more than 5-8 developers actively working on the code. Coordination in a monolith becomes friction.
+2. **Load scale:** a specific context (probably Intelligence) requires fundamentally different technology or scaling than the rest (e.g. we need Python + GPUs for own models).
+3. **Stable boundaries:** the domain stabilizes and boundaries don't change for 6+ months. The "evolutionary domain" argument disappears.
+4. **Availability problems:** a bug in one module frequently brings down the entire system, and the cost of this exceeds the operational cost of separating.
+5. **Compliance requirements:** some enterprise client requires physical isolation of their data or processing.
+6. **Operational maturity:** we have SRE, advanced distributed observability, and experience operating distributed systems.
+
+The first candidate for extraction, when the time comes, will probably be **Intelligence** (for ML stack and LLM scaling reasons). The second reasonable candidate is **TrainingData** (for ingestion volume and need for dedicated throughput).
+
+## References
+
+- *Building Microservices* — Sam Newman (chapters on when NOT to do microservices).
+- *Monolith to Microservices* — Sam Newman (the evolution path from monolith).
+- *Implementing Domain-Driven Design* — Vaughn Vernon (bounded contexts as service boundaries).
+- Modular Monolith: A Primer — Kamil Grzybek (reference article series).
+- *.NET Microservices: Architecture for Containerized .NET Applications* — Microsoft (free book, chapter on modular monolith).
+- `docs/ARCHITECTURE.md` level 4 (Architectural principles, particularly P8: "Designed for one dev today, extensible to a team of 10 tomorrow").

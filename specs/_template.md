@@ -1,193 +1,193 @@
-# SPEC NNN: Título de la feature
+# SPEC NNN: Feature title
 
-> Template de spec siguiendo el flujo SDD sobre base DDD (ver ADR-0002).
-> Una spec describe **comportamiento** en lenguaje ubicuo de dominio, no estructura técnica.
+> Spec template following the SDD flow on top of DDD (see ADR-0002).
+> A spec describes **behavior** in the domain's ubiquitous language, not technical structure.
 
 ---
 
 ## Metadata
 
-- **ID:** SPEC-{contexto}-{numero}
-- **Estado:** Draft | Review | Accepted | Implemented | Deprecated
-- **Autor:** Felipe
-- **Fecha creación:** YYYY-MM-DD
-- **Última actualización:** YYYY-MM-DD
-- **Issues/PRs relacionados:** #NN
+- **ID:** SPEC-{context}-{number}
+- **Status:** Draft | Review | Accepted | Implemented | Deprecated
+- **Author:** Felipe
+- **Created:** YYYY-MM-DD
+- **Last updated:** YYYY-MM-DD
+- **Related issues/PRs:** #NN
 
 ---
 
-## Contexto de dominio
+## Domain context
 
 - **Bounded context:** (Identity | AthleteProfile | TrainingData | Coaching | Intelligence | Communication | Billing)
-- **Agregado(s) afectado(s):** nombre del agregado raíz que se crea o modifica
-- **Capacidades de negocio cubiertas:** referencias a `docs/ARCHITECTURE.md` nivel 2 (ej. RF-PLAN-04)
-- **Flujo end-to-end relacionado:** si aplica, referencia al nivel 12 del ARCHITECTURE
+- **Affected aggregate(s):** name of the aggregate root that is created or modified
+- **Business capabilities covered:** references to `docs/ARCHITECTURE.md` level 2 (e.g. RF-PLAN-04)
+- **Related end-to-end flow:** if applicable, reference to ARCHITECTURE level 12
 
 ---
 
-## Historia de usuario
+## User story
 
-Formato clásico pero en términos de dominio:
+Classic format but in domain terms:
 
-> Como **[rol: coach / atleta / admin]**, quiero **[capacidad en lenguaje de negocio]**, para **[beneficio concreto]**.
+> As a **[role: coach / athlete / admin]**, I want to **[capability in business language]**, so that **[concrete benefit]**.
 
-Ejemplo:
-> Como coach, quiero ajustar las sesiones de una semana del plan de un atleta, para responder a cómo se sintió esa semana y adaptar la carga a las próximas.
-
----
-
-## Invariantes preservadas
-
-Lista las invariantes del/los agregado(s) que esta feature **debe respetar**. Referenciar las invariantes ya documentadas en `ARCHITECTURE.md` nivel 11 y/o declarar invariantes nuevas si esta feature las introduce.
-
-Ejemplo:
-- Incremento de carga semanal ≤ 10% salvo flag explícito del coach (regla fisiológica estándar).
-- No hay 2 sesiones de alta intensidad consecutivas sin recuperación ≥24h.
-- Sesiones ya completadas no se modifican; cualquier cambio crea versión nueva del plan.
-
-Si esta feature introduce invariantes nuevas al dominio, marcarlas claramente con **[NUEVA]** y asegurarse de actualizar `ARCHITECTURE.md` en el mismo PR.
+Example:
+> As a coach, I want to adjust the sessions of a week in an athlete's plan, to respond to how they felt that week and adapt the load for the coming weeks.
 
 ---
 
-## Escenarios de aceptación
+## Preserved invariants
 
-Formato Given/When/Then. Estos escenarios se traducen directamente a tests de aceptación. **Cada spec debe tener al menos 3 escenarios:** el camino feliz, un caso de error esperable, y un caso borde.
+List the invariants of the aggregate(s) that this feature **must respect**. Reference invariants already documented in `ARCHITECTURE.md` level 11 and/or declare new invariants if this feature introduces them.
 
-### E1: [nombre corto del escenario, camino feliz]
+Example:
+- Weekly load increase ≤ 10% without an explicit coach flag (standard physiological rule).
+- No 2 consecutive high-intensity sessions without ≥24h recovery.
+- Already-completed sessions are not modified; any change creates a new version of the plan.
 
-**Given** [estado inicial del sistema relevante]
-**And** [condición adicional si aplica]
-**When** [acción que dispara el caso de uso]
-**Then** [resultado esperado]
-**And** [resultado secundario si aplica]
+If this feature introduces new invariants to the domain, mark them clearly with **[NEW]** and make sure to update `ARCHITECTURE.md` in the same PR.
 
-### E2: [escenario de error/violación de invariante]
+---
+
+## Acceptance scenarios
+
+Given/When/Then format. These scenarios translate directly to acceptance tests. **Each spec must have at least 3 scenarios:** the happy path, an expected error case, and an edge case.
+
+### E1: [short scenario name, happy path]
+
+**Given** [relevant initial system state]
+**And** [additional condition if applicable]
+**When** [action that triggers the use case]
+**Then** [expected result]
+**And** [secondary result if applicable]
+
+### E2: [error/invariant violation scenario]
 
 ...
 
-### E3: [caso borde o edge case]
+### E3: [edge case or boundary case]
 
 ...
 
-### E4: [opcional, más escenarios si la feature lo amerita]
+### E4: [optional, more scenarios if the feature warrants it]
 
 ---
 
-## Casos de uso / operaciones involucradas
+## Use cases / operations involved
 
-Lista los commands y queries que implementan esta feature. Para cada uno:
+List the commands and queries that implement this feature. For each one:
 
-### Command: NombreDelCommand
+### Command: CommandName
 
 - **Input:**
-  - `Campo1` (tipo): descripción.
-  - `Campo2` (tipo): descripción.
-- **Output:** `Result<TipoDeRetorno>`
-- **Precondiciones:** qué tiene que ser verdad antes de ejecutarse.
-- **Postcondiciones:** qué es verdad después de ejecución exitosa.
-- **Errores esperables:** qué errores puede devolver (como `Result.Failure`).
+  - `Field1` (type): description.
+  - `Field2` (type): description.
+- **Output:** `Result<ReturnType>`
+- **Preconditions:** what must be true before execution.
+- **Postconditions:** what is true after successful execution.
+- **Expected errors:** what errors can be returned (as `Result.Failure`).
 
-### Query: NombreDeQuery
+### Query: QueryName
 
-- **Input:** parámetros.
-- **Output:** DTO de respuesta.
-- **Consideraciones:** autorización, caching, etc.
+- **Input:** parameters.
+- **Output:** response DTO.
+- **Considerations:** authorization, caching, etc.
 
 ---
 
-## Eventos emitidos
+## Events emitted
 
-### Domain events (in-process, dentro del bounded context)
+### Domain events (in-process, within the bounded context)
 
-- `NombreDelDomainEvent`: cuándo se emite, qué datos lleva, quién lo consume internamente.
+- `EventName`: when it's emitted, what data it carries, who consumes it internally.
 
 ### Integration events (cross-context, via outbox)
 
-- `NombreDelIntegrationEvent`: cuándo se emite, qué datos lleva, qué contextos lo consumen.
+- `IntegrationEventName`: when it's emitted, what data it carries, which contexts consume it.
 
 ---
 
-## Eventos consumidos
+## Events consumed
 
-Si esta feature reacciona a eventos de otros contextos, listarlos aquí:
+If this feature reacts to events from other contexts, list them here:
 
-- `NombreDelEvento` emitido por `OtroContexto`: cómo reacciona esta feature cuando lo recibe.
-
----
-
-## Autorización y multi-tenancy
-
-- **Quién puede ejecutar:** rol(es) permitido(s).
-- **Ámbito:** qué datos puede ver/modificar. Respeto de tenant isolation.
-- **Reglas especiales:** menciones de `CanManageAthlete`, `CanViewPlan`, etc.
+- `EventName` emitted by `OtherContext`: how this feature reacts when it receives it.
 
 ---
 
-## Consideraciones no funcionales
+## Authorization and multi-tenancy
 
-Solo si son relevantes para esta feature. No copiar todo de `ARCHITECTURE.md`.
+- **Who can execute:** allowed role(s).
+- **Scope:** what data can be seen/modified. Tenant isolation respect.
+- **Special rules:** mentions of `CanManageAthlete`, `CanViewPlan`, etc.
 
-- **Performance:** SLA específico si difiere del default.
-- **Seguridad:** datos sensibles involucrados, manejo especial.
-- **Privacidad:** consentimientos, retención.
-- **Observabilidad:** métricas o logs específicos que esta feature debe exponer.
+---
+
+## Non-functional considerations
+
+Only if relevant to this feature. Don't copy everything from `ARCHITECTURE.md`.
+
+- **Performance:** specific SLA if it differs from the default.
+- **Security:** sensitive data involved, special handling.
+- **Privacy:** consents, retention.
+- **Observability:** specific metrics or logs that this feature must expose.
 
 ---
 
 ## Out of scope
 
-Lista explícita de lo que esta feature **no** hace. Evita scope creep y deja claro el alcance.
+Explicit list of what this feature **does not** do. Prevents scope creep and makes the scope clear.
 
-Ejemplo:
-- Sugerencias de IA para el ajuste (esa es feature aparte del contexto Intelligence).
-- Notificación al atleta del cambio (lo maneja Communication escuchando el evento).
-- UI del dashboard (feature de frontend aparte).
-
----
-
-## Dependencias
-
-- **De otras features/specs:** si esta depende de que otras estén implementadas primero.
-- **De decisiones arquitectónicas (ADRs):** si aplica algún ADR específico.
-- **De servicios externos:** si requiere nueva integración o consume API externa.
+Example:
+- AI suggestions for the adjustment (that's a separate feature from the Intelligence context).
+- Notification to the athlete of the change (handled by Communication listening to the event).
+- Dashboard UI (separate frontend feature).
 
 ---
 
-## Preguntas abiertas
+## Dependencies
 
-Si hay aspectos de la spec no resueltos todavía, declararlos acá para no olvidar. Antes de marcar la spec como `Accepted`, estas preguntas deben tener respuesta.
-
-- [ ] ¿Qué pasa en el caso X que no está cubierto arriba?
-- [ ] ¿Se requiere migration de datos existentes?
-
----
-
-## Criterios de Done
-
-- [ ] Tests unitarios del/los agregado(s) cubren invariantes declaradas.
-- [ ] Tests de aceptación cubren todos los escenarios E1..EN.
-- [ ] Tests de integración validan persistencia y eventos.
-- [ ] Endpoints de API expuestos si aplica, con autorización correcta.
-- [ ] Observabilidad instrumentada (logs estructurados, métricas si aplica).
-- [ ] Documentación de API actualizada (OpenAPI).
-- [ ] `ARCHITECTURE.md` actualizado si hubo refinamiento del modelo.
-- [ ] ADR creado si hubo decisión arquitectónica nueva.
-- [ ] Code review aprobado.
+- **On other features/specs:** if this depends on others being implemented first.
+- **On architectural decisions (ADRs):** if any specific ADR applies.
+- **On external services:** if it requires a new integration or consumes an external API.
 
 ---
 
-## Notas de implementación
+## Open questions
 
-Espacio libre para consideraciones que el implementador (humano o agente) debe tener en cuenta, sin ser parte del contrato de la spec.
+If there are unresolved aspects of the spec, declare them here so they're not forgotten. Before marking the spec as `Accepted`, these questions must be answered.
 
-Ejemplo:
-- "Considerar usar specification pattern para la validación de progresión de carga porque se reutiliza en otras features."
-- "La librería X tiene un bug conocido en el método Y, evitar usarla."
+- [ ] What happens in case X that isn't covered above?
+- [ ] Is a data migration of existing data required?
 
 ---
 
-## Historial de cambios
+## Definition of Done
 
-| Fecha | Cambio | Razón |
-|-------|--------|-------|
-| YYYY-MM-DD | Creación | Initial draft |
+- [ ] Unit tests of the aggregate(s) cover declared invariants.
+- [ ] Acceptance tests cover all scenarios E1..EN.
+- [ ] Integration tests validate persistence and events.
+- [ ] API endpoints exposed if applicable, with correct authorization.
+- [ ] Observability instrumented (structured logs, metrics if applicable).
+- [ ] API documentation updated (OpenAPI).
+- [ ] `ARCHITECTURE.md` updated if the model was refined.
+- [ ] ADR created if there was a new architectural decision.
+- [ ] Code review approved.
+
+---
+
+## Implementation notes
+
+Free space for considerations that the implementer (human or agent) should keep in mind, without being part of the spec's contract.
+
+Example:
+- "Consider using the specification pattern for load progression validation because it's reused in other features."
+- "Library X has a known bug in method Y, avoid using it."
+
+---
+
+## Change history
+
+| Date | Change | Reason |
+|------|--------|--------|
+| YYYY-MM-DD | Creation | Initial draft |

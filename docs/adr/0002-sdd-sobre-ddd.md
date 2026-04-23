@@ -1,189 +1,189 @@
-# ADR-0002: Spec-Driven Development sobre base Domain-Driven Design
+# ADR-0002: Spec-Driven Development on top of Domain-Driven Design
 
-- **Fecha:** 2026-04-22
-- **Estado:** Aceptado
-- **Decididores:** Felipe
-- **Contexto técnico relacionado:** `docs/ARCHITECTURE.md` nivel 4 (Principios arquitectónicos, P1: DDD como norte), `CLAUDE.md` (reglas operativas para agentes de IA), ADR-0001 (Monolito modular).
+- **Date:** 2026-04-22
+- **Status:** Accepted
+- **Deciders:** Felipe
+- **Related technical context:** `docs/ARCHITECTURE.md` level 4 (Architectural principles, P1: DDD as north star), `CLAUDE.md` (operational rules for AI agents), ADR-0001 (Modular monolith).
 
-## Contexto y problema
+## Context and problem
 
-El proyecto va a construirse con asistencia intensiva de agentes de IA, específicamente Claude Code, como una herramienta central del flujo de desarrollo. Esto plantea una pregunta metodológica que no resuelve ni DDD ni ningún proceso ágil tradicional: **¿cómo delegar trabajo de implementación a un agente de IA preservando calidad arquitectónica y coherencia de dominio?**
+The project will be built with intensive AI agent assistance, specifically Claude Code, as a central tool in the development flow. This raises a methodological question that neither DDD nor any traditional agile process resolves: **how do you delegate implementation work to an AI agent while preserving architectural quality and domain coherence?**
 
-Las opciones típicas fallan de formas identificables:
+The typical options fail in identifiable ways:
 
-1. **Uso naíf del agente** (prompts conversacionales tipo "implementá la feature de ajustar plan"): produce código funcional pero inconsistente, con tendencia a transaction scripts, violaciones silenciosas de fronteras arquitectónicas, e invención de estructuras que ya existen con otro nombre.
-2. **DDD puro sin metodología de desarrollo**: excelente para el modelado estratégico, pero no define cómo convertir el modelo en código de forma repetible. Sin proceso, el agente no tiene mecanismos para respetar el modelo.
-3. **Proceso ágil tradicional** (user stories en backlog, implementación directa): pensado para humanos con contexto acumulado, no para agentes que necesitan contexto explícito en cada interacción.
+1. **Naive agent use** (conversational prompts like "implement the plan adjustment feature"): produces functional but inconsistent code, with a tendency toward transaction scripts, silent violations of architectural boundaries, and inventing structures that already exist under different names.
+2. **Pure DDD without a development methodology**: excellent for strategic modeling, but doesn't define how to convert the model into code in a repeatable way. Without a process, the agent has no mechanisms to respect the model.
+3. **Traditional agile process** (user stories in backlog, direct implementation): designed for humans with accumulated context, not for agents that need explicit context in each interaction.
 
-Existe una metodología emergente, **Spec-Driven Development (SDD)**, formalizada en los últimos años (GitHub Spec Kit, Amazon Kiro, iniciativas de Anthropic) diseñada específicamente para desarrollo asistido por IA. El principio central: **la especificación es el artefacto primario, el código es una expresión generada de la spec**.
+An emerging methodology exists, **Spec-Driven Development (SDD)**, formalized in recent years (GitHub Spec Kit, Amazon Kiro, Anthropic initiatives) specifically designed for AI-assisted development. The core principle: **the specification is the primary artifact, the code is a generated expression of the spec**.
 
-El problema: SDD aplicado naíf tiende a producir código orientado a features sin modelo de dominio rico. Specs típicas de SDD describen comportamiento externo sin restricciones internas, lo que invita al agente a elegir estructuras expedientes pero incorrectas.
+The problem: naively applied SDD tends to produce feature-oriented code without a rich domain model. Typical SDD specs describe external behavior without internal constraints, which invites the agent to choose expedient but incorrect structures.
 
-**La pregunta a resolver:** cómo combinar DDD (para estructura y modelado) con SDD (para flujo de desarrollo con IA) de manera que se potencien en lugar de competir.
+**The question to resolve:** how to combine DDD (for structure and modeling) with SDD (for development flow with AI) so they reinforce each other rather than compete.
 
-## Fuerzas en tensión
+## Forces in tension
 
-- **Velocidad de desarrollo con agente de IA** vs. **disciplina arquitectónica y de dominio**.
-- **Flexibilidad de prompts conversacionales** vs. **reproducibilidad y auditabilidad del proceso**.
-- **Autonomía del agente** vs. **control humano sobre decisiones de modelado**.
-- **Specs detalladas al punto de prescribir código** vs. **specs a nivel de comportamiento que dejan espacio al agente**.
-- **Proceso formal documentado** vs. **agilidad para un dev solo**.
+- **Development speed with AI agent** vs. **architectural and domain discipline**.
+- **Flexibility of conversational prompts** vs. **reproducibility and auditability of the process**.
+- **Agent autonomy** vs. **human control over modeling decisions**.
+- **Specs detailed to the point of prescribing code** vs. **specs at the behavior level that leave room for the agent**.
+- **Formally documented process** vs. **agility for a single dev**.
 
-## Alternativas consideradas
+## Alternatives considered
 
-### Alternativa 1: Desarrollo conversacional directo (no-SDD)
+### Alternative 1: Direct conversational development (no-SDD)
 
-Uso del agente como pair programmer conversacional. Cada feature se discute en chat, se itera, se implementa sin spec formal previa.
-
-**Pros:**
-- Máxima velocidad percibida.
-- Flexibilidad total.
-- Cero overhead metodológico.
-
-**Contras:**
-- Imposible auditar por qué el código es como es.
-- Decisiones se pierden en el historial de chat.
-- Agente genera código inconsistente entre sesiones.
-- Sin contrato explícito, el agente inventa estructuras.
-- Refactorings masivos posteriores al descubrir inconsistencias.
-- Alto riesgo de transaction scripts disfrazados de DDD.
-
-**Por qué no:** el costo de inconsistencia y rework supera la velocidad percibida. Además, pierde el valor de auditabilidad que necesita un proyecto con aspiración comercial y portfolio.
-
-### Alternativa 2: DDD puro con implementación manual
-
-Modelado DDD completo, uso del agente solo como asistente de tipeo ocasional. El dev escribe todo el código a mano.
+Using the agent as a conversational pair programmer. Each feature is discussed in chat, iterated, and implemented without a prior formal spec.
 
 **Pros:**
-- Control total sobre cada línea.
-- Código altamente consistente con el modelo.
-- No hay riesgo de invenciones del agente.
+- Maximum perceived speed.
+- Total flexibility.
+- Zero methodological overhead.
 
-**Contras:**
-- Desperdicia la capacidad del agente.
-- Velocidad de desarrollo de un solo dev sin asistencia intensiva.
-- No escala a las ambiciones del proyecto (MVP en 6 meses con 1 dev).
-- Volumen de código boilerplate que puede generarse automáticamente se escribe a mano.
+**Cons:**
+- Impossible to audit why the code is the way it is.
+- Decisions are lost in chat history.
+- Agent generates inconsistent code between sessions.
+- Without an explicit contract, the agent invents structures.
+- Massive refactors later when discovering inconsistencies.
+- High risk of transaction scripts disguised as DDD.
 
-**Por qué no:** en 2026, con agentes capaces, renunciar a asistencia intensiva es autolimitación. Hay que aprender a colaborar con el agente, no evitarlo.
+**Why not:** the cost of inconsistency and rework exceeds the perceived speed. Also loses the auditability value needed by a project with commercial aspirations and portfolio purposes.
 
-### Alternativa 3: SDD puro sin base de dominio
+### Alternative 2: Pure DDD with manual implementation
 
-Adoptar SDD tal como viene (specs orientadas a features, planes de implementación, generación) sin framework DDD detrás.
-
-**Pros:**
-- Proceso claro y repetible.
-- Alta velocidad con agente.
-- Trazabilidad spec → código.
-
-**Contras:**
-- Sin bounded contexts, el agente mezcla responsabilidades.
-- Sin agregados, no hay invariantes; el código termina siendo CRUD procedural.
-- Sin lenguaje ubicuo, los nombres derivan a genéricos (UserService, DataManager).
-- Evolución del producto se vuelve dolorosa porque el modelo no refleja el negocio.
-- A largo plazo, produce el mismo acoplamiento que un monolito no modular.
-
-**Por qué no:** el dominio de coaching de endurance es complejo (invariantes fisiológicas, periodización, carga de entrenamiento). Un modelo débil produce software que no escala intelectualmente con el problema.
-
-### Alternativa 4: DDD estratégico + SDD táctico (combinación disciplinada)
-
-Mantener DDD como framework de modelado y estructura (bounded contexts, agregados, eventos, lenguaje ubicuo), y usar SDD como metodología de desarrollo dentro de ese framework. Cada spec se escribe en el lenguaje ubicuo de DDD, respeta los bounded contexts, y opera sobre agregados ya identificados.
+Complete DDD modeling, using the agent only as an occasional typing assistant. The dev writes all code by hand.
 
 **Pros:**
-- Aprovecha ambas metodologías en los niveles donde brillan.
-- Agente tiene contexto explícito (el modelo DDD) y proceso claro (el flujo SDD).
-- Specs son auditables y trazables.
-- Modelo de dominio se refina controladamente a medida que se aprende.
-- Escalable a equipo: otros devs (humanos o agentes) leen specs y producen código consistente.
-- Separa claramente las decisiones de modelado (lentas, profundas, hechas por el dev con criterio) de las de implementación (rápidas, procedurales, asistibles por agente).
+- Total control over every line.
+- Highly consistent code with the model.
+- No risk of agent inventions.
 
-**Contras:**
-- Requiere disciplina para escribir specs antes de pedir código.
-- Overhead inicial de escribir la spec antes de implementar.
-- Necesita infraestructura: directorio `specs/`, templates, revisión.
-- Curva de aprendizaje para el propio dev sobre cómo escribir buenas specs.
+**Cons:**
+- Wastes the agent's capability.
+- Development speed of a single dev without intensive assistance.
+- Doesn't scale to the project's ambitions (MVP in 6 months with 1 dev).
+- Volume of boilerplate code that could be generated automatically is written by hand.
 
-### Alternativa 5: BDD (Behavior-Driven Development) como equivalente
+**Why not:** in 2026, with capable agents, forgoing intensive assistance is self-limitation. We need to learn to collaborate with the agent, not avoid it.
 
-Usar BDD con Gherkin (Given/When/Then) como spec de features.
+### Alternative 3: Pure SDD without domain foundation
+
+Adopting SDD as-is (feature-oriented specs, implementation plans, generation) without a DDD framework behind it.
 
 **Pros:**
-- Lenguaje de aceptación claro y ejecutable.
-- Madurez de herramientas (SpecFlow en .NET, Cucumber).
+- Clear and repeatable process.
+- High speed with agent.
+- Spec → code traceability.
 
-**Contras:**
-- BDD se centra en escenarios de aceptación, no cubre todos los aspectos de una spec (invariantes de dominio, eventos emitidos, casos de uso, out-of-scope).
-- Es complementario, no sustituto.
-- BDD no define un proceso de colaboración con agentes de IA.
+**Cons:**
+- Without bounded contexts, the agent mixes responsibilities.
+- Without aggregates, there are no invariants; the code ends up being procedural CRUD.
+- Without ubiquitous language, names drift to generic (UserService, DataManager).
+- Product evolution becomes painful because the model doesn't reflect the business.
+- Long-term, produces the same coupling as a non-modular monolith.
 
-**Por qué no como solución única:** BDD es valioso pero incompleto. Los escenarios Given/When/Then se incorporan *dentro* de la spec de SDD como sección de escenarios de aceptación, pero no reemplazan al spec completo.
+**Why not:** the endurance coaching domain is complex (physiological invariants, periodization, training load). A weak model produces software that doesn't scale intellectually with the problem.
 
-## Decisión
+### Alternative 4: Strategic DDD + Tactical SDD (disciplined combination)
 
-**Adoptar Domain-Driven Design como framework estratégico (modelado, estructura, lenguaje) y Spec-Driven Development como metodología táctica (flujo de desarrollo con asistencia de IA).**
+Maintain DDD as the modeling and structure framework (bounded contexts, aggregates, events, ubiquitous language), and use SDD as the development methodology within that framework. Each spec is written in DDD's ubiquitous language, respects the bounded contexts, and operates on already-identified aggregates.
 
-Operativamente, esto significa:
+**Pros:**
+- Leverages both methodologies at the levels where they shine.
+- Agent has explicit context (the DDD model) and a clear process (the SDD flow).
+- Specs are auditable and traceable.
+- Domain model is refined in a controlled way as learning occurs.
+- Scalable to a team: other devs (human or agents) read specs and produce consistent code.
+- Clearly separates modeling decisions (slow, deep, made by the dev with judgment) from implementation decisions (fast, procedural, assistable by agent).
 
-1. **El modelado estratégico vive en `docs/ARCHITECTURE.md` y se refina con cuidado.** Bounded contexts, agregados, eventos, invariantes, lenguaje ubicuo: todos modelados deliberadamente. Cambios al modelo requieren reflexión y eventual ADR.
+**Cons:**
+- Requires discipline to write specs before requesting code.
+- Initial overhead of writing the spec before implementing.
+- Needs infrastructure: `specs/` directory, templates, review.
+- Learning curve for the dev on how to write good specs.
 
-2. **Cada feature se desarrolla siguiendo el flujo SDD adaptado:**
-   - Escribir spec de feature en `specs/<bounded-context>/<numero>-<nombre>.md`.
-   - La spec usa lenguaje ubicuo de DDD, declara bounded context y agregados involucrados, lista invariantes preservadas, define escenarios Given/When/Then, enumera eventos emitidos.
-   - Escribir plan de implementación (estructura técnica derivada de la spec).
-   - Delegar implementación al agente con spec + plan + `CLAUDE.md` como contexto.
-   - Revisar código generado contra spec.
-   - Si se descubre algo que refina el modelo, actualizar `ARCHITECTURE.md` o abrir ADR.
+### Alternative 5: BDD (Behavior-Driven Development) as equivalent
 
-3. **Las specs son artefactos versionados y revisables.** Se commitean como código. Se refinan con PRs. Son la fuente de verdad sobre qué hace cada feature.
+Using BDD with Gherkin (Given/When/Then) as feature spec.
 
-4. **El agente de IA opera dentro del framework, no fuera.** No inventa bounded contexts, no redefine agregados, no cambia el lenguaje ubicuo sin consentimiento explícito. `CLAUDE.md` codifica estas restricciones.
+**Pros:**
+- Clear and executable acceptance language.
+- Tool maturity (SpecFlow in .NET, Cucumber).
 
-5. **Escenarios de aceptación (Given/When/Then) son parte obligatoria de la spec** y se traducen directamente a tests de integración/aceptación.
+**Cons:**
+- BDD focuses on acceptance scenarios, doesn't cover all aspects of a spec (domain invariants, events emitted, use cases, out-of-scope).
+- It's complementary, not a substitute.
+- BDD doesn't define a collaboration process with AI agents.
 
-## Consecuencias
+**Why not as sole solution:** BDD is valuable but incomplete. Given/When/Then scenarios are incorporated *within* the SDD spec as an acceptance scenarios section, but don't replace the full spec.
 
-### Positivas
+## Decision
 
-- **Velocidad alta con calidad alta.** El agente es productivo porque tiene contexto rico; el código es consistente porque el framework está claro.
-- **Auditabilidad completa.** Cada feature tiene spec + plan + código + tests. Se puede reconstruir el razonamiento meses después.
-- **Onboarding claro.** Un dev nuevo (o agente nuevo) lee `ARCHITECTURE.md`, `CLAUDE.md`, y las specs existentes, y sabe cómo contribuir.
-- **Refinamiento del dominio controlado.** Descubrimientos durante implementación se capitalizan refinando `ARCHITECTURE.md`, no dejándose en el código.
-- **Portfolio diferenciador.** "Construido con SDD+DDD, flujo riguroso de spec → plan → implementación asistida" es una historia de ingeniería madura.
-- **Tests derivados de specs.** Los escenarios Given/When/Then se convierten en tests de aceptación automáticamente.
-- **Escalabilidad a equipo.** El proceso no depende del dev original; es repetible por cualquiera.
+**Adopt Domain-Driven Design as the strategic framework (modeling, structure, language) and Spec-Driven Development as the tactical methodology (development flow with AI assistance).**
 
-### Negativas / Trade-offs aceptados
+Operationally, this means:
 
-- **Overhead por feature pequeña.** Escribir spec para cambios triviales (typo fix, ajuste cosmético) es excesivo. Mitigación: definir qué cambios ameritan spec y cuáles no (guía en el README del directorio `specs/`).
-- **Disciplina dependiente del dev.** Nada fuerza que las specs se escriban antes del código. Mitigación: regla cultural explícita, code review rechaza PRs de features nuevas sin spec asociada.
-- **Curva de aprendizaje.** Escribir buenas specs es una habilidad. Las primeras van a ser imperfectas. Mitigación: iterar sobre el template, revisar specs existentes antes de escribir nuevas.
-- **Riesgo de bikeshedding en specs.** Gastar demasiado tiempo perfeccionando la spec en vez de implementar. Mitigación: timebox de spec (máx 1-2 horas para features normales).
-- **Specs pueden quedar desincronizadas del código.** Si se modifica código sin actualizar la spec, la spec pierde valor. Mitigación: definir que la spec es fuente de verdad; cambios importantes se hacen en la spec primero.
+1. **Strategic modeling lives in `docs/ARCHITECTURE.md` and is refined with care.** Bounded contexts, aggregates, events, invariants, ubiquitous language: all deliberately modeled. Changes to the model require reflection and eventual ADR.
 
-### Neutrales
+2. **Each feature is developed following the adapted SDD flow:**
+   - Write feature spec in `specs/<bounded-context>/<number>-<name>.md`.
+   - The spec uses DDD ubiquitous language, declares bounded context and aggregates involved, lists preserved invariants, defines Given/When/Then scenarios, enumerates events emitted.
+   - Write implementation plan (technical structure derived from the spec).
+   - Delegate implementation to the agent with spec + plan + `CLAUDE.md` as context.
+   - Review generated code against spec.
+   - If something refines the model is discovered, update `ARCHITECTURE.md` or open an ADR.
 
-- El directorio `specs/` crece con el tiempo. Se organiza por bounded context para mantener navegabilidad.
-- Algunas specs pueden evolucionar en múltiples versiones (v1, v2) si la feature se rehace. Se conserva historial.
-- No todas las features tienen spec. Cambios puramente técnicos (refactor, mejora de performance, dependency update) no requieren spec aunque pueden requerir ADR si son arquitectónicos.
+3. **Specs are versioned and reviewable artifacts.** They are committed as code. They're refined with PRs. They're the source of truth about what each feature does.
 
-## Cuándo reevaluar esta decisión
+4. **The AI agent operates within the framework, not outside it.** It doesn't invent bounded contexts, doesn't redefine aggregates, doesn't change the ubiquitous language without explicit consent. `CLAUDE.md` codifies these restrictions.
 
-Esta decisión se revisa si se cumple alguna de estas condiciones:
+5. **Acceptance scenarios (Given/When/Then) are a mandatory part of the spec** and translate directly into integration/acceptance tests.
 
-1. **El overhead de escribir specs supera el valor.** Si pasan semanas donde el dev evita tareas porque "escribir la spec es mucho trabajo", el proceso está mal calibrado.
-2. **Las specs no se respetan.** Si el código generado diverge sistemáticamente de lo especificado y nadie lo corrige, el framework no está funcionando.
-3. **El agente no puede trabajar con el nivel de detalle de las specs.** Si las specs no son suficientes para que el agente genere código correcto, hay que repensar el template.
-4. **Surge una metodología claramente superior.** Si aparece algo que combina mejor DDD y desarrollo asistido por IA, considerar migración.
-5. **Equipo crece mucho.** Con 10+ devs, el proceso puede requerir formalización adicional (revisión de specs por otro dev, por ejemplo).
+## Consequences
 
-## Referencias
+### Positive
+
+- **High speed with high quality.** The agent is productive because it has rich context; the code is consistent because the framework is clear.
+- **Full auditability.** Each feature has spec + plan + code + tests. The reasoning can be reconstructed months later.
+- **Clear onboarding.** A new dev (or new agent) reads `ARCHITECTURE.md`, `CLAUDE.md`, and the existing specs, and knows how to contribute.
+- **Controlled domain refinement.** Discoveries during implementation are capitalized by refining `ARCHITECTURE.md`, not left in the code.
+- **Differentiating portfolio.** "Built with SDD+DDD, rigorous spec → plan → assisted implementation flow" is a mature engineering story.
+- **Tests derived from specs.** Given/When/Then scenarios become acceptance tests automatically.
+- **Team scalability.** The process doesn't depend on the original dev; it's repeatable by anyone.
+
+### Negative / Accepted trade-offs
+
+- **Overhead for small features.** Writing a spec for trivial changes (typo fix, cosmetic adjustment) is excessive. Mitigation: define which changes warrant a spec and which don't (guide in the `specs/` directory README).
+- **Discipline dependent on the dev.** Nothing forces specs to be written before code. Mitigation: explicit cultural rule, code review rejects new feature PRs without an associated spec.
+- **Learning curve.** Writing good specs is a skill. The first ones will be imperfect. Mitigation: iterate on the template, review existing specs before writing new ones.
+- **Risk of bikeshedding on specs.** Spending too much time perfecting the spec instead of implementing. Mitigation: spec timebox (max 1-2 hours for normal features).
+- **Specs can become desynchronized from code.** If code is modified without updating the spec, the spec loses value. Mitigation: define that the spec is the source of truth; important changes are made in the spec first.
+
+### Neutral
+
+- The `specs/` directory grows over time. It's organized by bounded context to maintain navigability.
+- Some specs may evolve into multiple versions (v1, v2) if the feature is remade. History is preserved.
+- Not all features have specs. Purely technical changes (refactor, performance improvement, dependency update) don't require specs though they may require an ADR if architectural.
+
+## When to revisit this decision
+
+This decision is reviewed if any of these conditions are met:
+
+1. **The overhead of writing specs exceeds the value.** If weeks pass where the dev avoids tasks because "writing the spec is too much work", the process is miscalibrated.
+2. **Specs are not respected.** If the generated code systematically diverges from what was specified and no one corrects it, the framework isn't working.
+3. **The agent can't work with the level of detail in the specs.** If specs aren't sufficient for the agent to generate correct code, the template needs rethinking.
+4. **A clearly superior methodology emerges.** If something appears that better combines DDD and AI-assisted development, consider migrating.
+5. **Team grows significantly.** With 10+ devs, the process may require additional formalization (spec review by another dev, for example).
+
+## References
 
 - GitHub Spec Kit — https://github.com/github/spec-kit
-- Amazon Kiro (Spec-Driven Development) — documentación pública de AWS.
-- Anthropic Skills — patrones de colaboración con Claude en desarrollo.
+- Amazon Kiro (Spec-Driven Development) — AWS public documentation.
+- Anthropic Skills — collaboration patterns with Claude in development.
 - *Implementing Domain-Driven Design* — Vaughn Vernon.
 - *Domain-Driven Design Distilled* — Vaughn Vernon.
-- *Specification by Example* — Gojko Adzic (sobre BDD y specs ejecutables).
-- `docs/ARCHITECTURE.md` niveles 4 (principios) y 5 (bounded contexts).
-- `CLAUDE.md` sección "Reglas de arquitectura no negociables" y "Cuando te pido implementar algo nuevo".
-- ADR-0001 (Monolito modular) — establece el contexto de simplicidad operativa al que SDD+DDD se adapta.
+- *Specification by Example* — Gojko Adzic (on BDD and executable specs).
+- `docs/ARCHITECTURE.md` levels 4 (principles) and 5 (bounded contexts).
+- `CLAUDE.md` sections "Non-negotiable architecture rules" and "When asked to implement something new".
+- ADR-0001 (Modular monolith) — establishes the operational simplicity context that SDD+DDD adapts to.

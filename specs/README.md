@@ -1,135 +1,135 @@
 # Specs
 
-Este directorio contiene las **specs** (especificaciones) de cada feature del sistema. Son el artefacto primario del flujo de desarrollo.
+This directory contains the **specs** (specifications) of each system feature. They are the primary artifact in the development flow.
 
-Si no leíste antes, arrancá por:
-- **ADR-0002** (`docs/adr/0002-sdd-sobre-ddd.md`) — decisión metodológica de combinar SDD con DDD.
-- **`docs/ARCHITECTURE.md`** — el modelo de dominio que estas specs respetan.
-- **`CLAUDE.md`** — reglas operativas para el agente.
-
----
-
-## ¿Qué es una spec?
-
-Una spec describe una feature en términos de **comportamiento del dominio**, no de implementación técnica. Responde:
-
-- ¿Qué hace esta feature en lenguaje del negocio?
-- ¿A qué bounded context pertenece?
-- ¿Qué agregados toca?
-- ¿Qué invariantes preserva?
-- ¿Qué escenarios la verifican?
-- ¿Qué eventos emite?
-
-Una spec NO describe:
-
-- Archivos, clases, métodos concretos (eso va en el plan de implementación).
-- Decisiones arquitectónicas amplias (eso va en ADRs).
-- UI / wireframes (eso va en design docs aparte).
+If you haven't already, start with:
+- **ADR-0002** (`docs/adr/0002-sdd-sobre-ddd.md`) — methodological decision to combine SDD with DDD.
+- **`docs/ARCHITECTURE.md`** — the domain model that these specs respect.
+- **`CLAUDE.md`** — operational rules for the agent.
 
 ---
 
-## ¿Por qué existen las specs?
+## What is a spec?
 
-Tres razones concretas:
+A spec describes a feature in terms of **domain behavior**, not technical implementation. It answers:
 
-1. **Contexto para el agente de IA.** Claude Code genera código coherente cuando tiene contexto explícito. La spec es ese contexto, estructurado y revisable.
-2. **Fuente de verdad sobre comportamiento.** Cuando algo no funciona como se espera, se revisa la spec. Si la spec decía eso, el código está mal. Si la spec no lo decía, la spec estaba incompleta.
-3. **Tests derivados automáticamente.** Los escenarios Given/When/Then de la spec se traducen directo a tests de aceptación. Las invariantes declaradas se vuelven tests unitarios del agregado.
+- What does this feature do in business language?
+- Which bounded context does it belong to?
+- Which aggregates does it touch?
+- Which invariants does it preserve?
+- Which scenarios verify it?
+- Which events does it emit?
 
----
+A spec does NOT describe:
 
-## Cuándo escribir una spec
-
-### Escribir spec
-
-- Features nuevas que afectan al dominio.
-- Nuevos casos de uso (commands o queries).
-- Nuevos eventos (domain o integration).
-- Cambios significativos a un agregado existente.
-- Cualquier feature que se vaya a delegar al agente de IA para implementación.
-
-### No escribir spec
-
-- Bugfixes triviales (typo, off-by-one, parseo mal).
-- Refactors puros sin cambio de comportamiento (esos pueden requerir ADR si son arquitectónicos).
-- Cambios de configuración, dependencias, infraestructura.
-- Ajustes de UI/UX que no afectan el backend.
-- Mejoras de performance que no cambian el contrato.
-
-**Regla práctica:** si vas a pedirle al agente "implementá X" y X tiene lógica de dominio, escribí la spec antes.
+- Specific files, classes, or methods (that goes in the implementation plan).
+- Broad architectural decisions (that goes in ADRs).
+- UI / wireframes (that goes in separate design docs).
 
 ---
 
-## Cómo escribir una spec
+## Why do specs exist?
 
-### Paso 1: Determinar el bounded context
+Three concrete reasons:
 
-Antes de escribir nada, preguntarse: **¿a qué bounded context pertenece esta feature?**. Si toca varios, decidir cuál es el "dueño" principal y qué partes se resuelven por eventos hacia los otros.
+1. **Context for the AI agent.** Claude Code generates coherent code when it has explicit context. The spec is that context, structured and reviewable.
+2. **Source of truth about behavior.** When something doesn't work as expected, review the spec. If the spec said so, the code is wrong. If the spec didn't say it, the spec was incomplete.
+3. **Tests derived automatically.** The Given/When/Then scenarios in the spec translate directly to acceptance tests. The declared invariants become unit tests of the aggregate.
 
-Si no podés responder con claridad, el modelo estratégico tiene un hueco. Actualizá `ARCHITECTURE.md` antes de seguir.
+---
 
-### Paso 2: Copiar el template
+## When to write a spec
+
+### Write a spec
+
+- New features that affect the domain.
+- New use cases (commands or queries).
+- New events (domain or integration).
+- Significant changes to an existing aggregate.
+- Any feature that will be delegated to the AI agent for implementation.
+
+### Don't write a spec
+
+- Trivial bugfixes (typo, off-by-one, bad parsing).
+- Pure refactors without behavior change (those may require an ADR if architectural).
+- Configuration, dependency, or infrastructure changes.
+- UI/UX adjustments that don't affect the backend.
+- Performance improvements that don't change the contract.
+
+**Practical rule:** if you're going to ask the agent to "implement X" and X has domain logic, write the spec first.
+
+---
+
+## How to write a spec
+
+### Step 1: Determine the bounded context
+
+Before writing anything, ask yourself: **which bounded context does this feature belong to?**. If it touches several, decide which is the primary "owner" and what parts are resolved by events to the others.
+
+If you can't answer clearly, the strategic model has a gap. Update `ARCHITECTURE.md` before continuing.
+
+### Step 2: Copy the template
 
 ```
-cp specs/_template.md specs/<contexto>/<numero>-<nombre-kebab>.md
+cp specs/_template.md specs/<context>/<number>-<kebab-name>.md
 ```
 
-Numeración: secuencial dentro del bounded context, con padding de ceros (`001`, `002`, ..., `025`).
+Numbering: sequential within the bounded context, with zero-padding (`001`, `002`, ..., `025`).
 
-### Paso 3: Completar secciones en orden
+### Step 3: Fill in sections in order
 
-Seguir el template de arriba hacia abajo. El orden importa porque cada sección informa a la siguiente:
+Follow the template from top to bottom. Order matters because each section informs the next:
 
-1. **Metadata** (estado inicial: `Draft`).
-2. **Contexto de dominio** — bounded context, agregado, capacidades de negocio.
-3. **Historia de usuario** — en términos de dominio, no de UI.
-4. **Invariantes preservadas** — cuáles del agregado, si hay nuevas marcarlas.
-5. **Escenarios de aceptación** — mínimo 3: camino feliz, error, caso borde.
-6. **Casos de uso involucrados** — commands y queries.
-7. **Eventos emitidos y consumidos**.
-8. **Autorización y multi-tenancy**.
-9. **Consideraciones no funcionales** solo si aplican.
-10. **Out of scope** — explícito.
-11. **Dependencias**.
-12. **Preguntas abiertas** si las hay.
-13. **Criterios de Done**.
-14. **Notas de implementación** (opcional).
+1. **Metadata** (initial status: `Draft`).
+2. **Domain context** — bounded context, aggregate, business capabilities.
+3. **User story** — in domain terms, not UI terms.
+4. **Preserved invariants** — which ones from the aggregate, mark new ones if any.
+5. **Acceptance scenarios** — minimum 3: happy path, error, edge case.
+6. **Use cases involved** — commands and queries.
+7. **Events emitted and consumed**.
+8. **Authorization and multi-tenancy**.
+9. **Non-functional considerations** only if applicable.
+10. **Out of scope** — explicit.
+11. **Dependencies**.
+12. **Open questions** if any.
+13. **Definition of Done**.
+14. **Implementation notes** (optional).
 
-### Paso 4: Revisar la spec antes de implementar
+### Step 4: Review the spec before implementing
 
-Checklist de revisión:
+Review checklist:
 
-- [ ] ¿Respeta las fronteras del bounded context?
-- [ ] ¿Usa lenguaje ubicuo (nombres del negocio, no genéricos)?
-- [ ] ¿Las invariantes están claras y son verificables?
-- [ ] ¿Los escenarios son completos (feliz + errores + bordes)?
-- [ ] ¿Los escenarios son testeables (Given/When/Then bien definidos)?
-- [ ] ¿Está claro qué eventos emite y quién los consume?
-- [ ] ¿El out-of-scope evita scope creep?
-- [ ] ¿Las preguntas abiertas tienen owner?
+- [ ] Does it respect the bounded context boundaries?
+- [ ] Does it use ubiquitous language (business names, not generic ones)?
+- [ ] Are the invariants clear and verifiable?
+- [ ] Are the scenarios complete (happy path + errors + edge cases)?
+- [ ] Are the scenarios testable (well-defined Given/When/Then)?
+- [ ] Is it clear which events are emitted and who consumes them?
+- [ ] Does the out-of-scope prevent scope creep?
+- [ ] Do open questions have an owner?
 
-Si algún check falla, iterá antes de pasar a implementación.
+If any check fails, iterate before moving to implementation.
 
-### Paso 5: Cambiar estado a `Accepted` y delegar al agente
+### Step 5: Change status to `Accepted` and delegate to the agent
 
-Una vez revisada, la spec pasa a `Accepted`. Ahora se puede:
+Once reviewed, the spec moves to `Accepted`. Now you can:
 
-1. Escribir el plan de implementación (estructura técnica).
-2. Delegar al agente de IA con: spec + plan + `CLAUDE.md` + `ARCHITECTURE.md`.
-3. Revisar el código generado contra la spec.
+1. Write the implementation plan (technical structure).
+2. Delegate to the AI agent with: spec + plan + `CLAUDE.md` + `ARCHITECTURE.md`.
+3. Review the generated code against the spec.
 
-### Paso 6: Actualizar estado a `Implemented` cuando el PR se mergee
+### Step 6: Update status to `Implemented` when the PR is merged
 
-Y si durante implementación se descubrió algo que refina el modelo, actualizar `ARCHITECTURE.md` o agregar ADR **en el mismo PR o uno siguiente**.
+And if during implementation something was discovered that refines the model, update `ARCHITECTURE.md` or add an ADR **in the same PR or the next one**.
 
 ---
 
-## Organización del directorio
+## Directory organization
 
 ```
 specs/
-├── README.md                                        ← este archivo
-├── _template.md                                     ← template para copiar
+├── README.md                                        ← this file
+├── _template.md                                     ← template to copy
 ├── identity/
 │   ├── 001-coach-registration.md
 │   └── 002-athlete-invitation.md
@@ -151,94 +151,94 @@ specs/
     └── 001-send-plan-adjustment-notification.md
 ```
 
-Nombres de archivo: `NNN-descripcion-kebab-case.md`.
+File names: `NNN-kebab-case-description.md`.
 
-Un subdirectorio por bounded context, alineado con los módulos del backend.
-
----
-
-## Estados de una spec
-
-| Estado | Significado |
-|--------|-------------|
-| `Draft` | En redacción. No implementar todavía. |
-| `Review` | Completa pero esperando revisión (mía o de otro dev). |
-| `Accepted` | Revisada y lista para implementar. |
-| `Implemented` | Feature mergeada a main. |
-| `Deprecated` | Feature ya no aplica; se conserva por historia. |
+One subdirectory per bounded context, aligned with the backend modules.
 
 ---
 
-## Relación con otros artefactos
+## Spec statuses
 
-| Artefacto | Qué captura | Velocidad de cambio |
-|-----------|-------------|---------------------|
-| `docs/ARCHITECTURE.md` | Modelo estratégico, estructura, principios | Baja (meses) |
-| `docs/adr/*.md` | Decisiones arquitectónicas individuales | Baja, una por decisión |
-| `specs/**/*.md` | Comportamiento de features concretas | Alta (por feature) |
-| Código en `src/` | Implementación que respeta todo lo anterior | Muy alta |
-
-**Flujo de influencia:** ARCHITECTURE → ADRs → specs → código.
-
-**Flujo de aprendizaje (feedback):** código → descubrimiento → spec refinada → a veces ARCHITECTURE actualizado o nuevo ADR.
+| Status | Meaning |
+|--------|---------|
+| `Draft` | Being written. Don't implement yet. |
+| `Review` | Complete but waiting for review (mine or another dev's). |
+| `Accepted` | Reviewed and ready to implement. |
+| `Implemented` | Feature merged to main. |
+| `Deprecated` | Feature no longer applies; kept for history. |
 
 ---
 
-## Sobre cómo trabajar con Claude Code usando specs
+## Relationship with other artifacts
 
-El flujo típico es:
+| Artifact | What it captures | Rate of change |
+|----------|-----------------|----------------|
+| `docs/ARCHITECTURE.md` | Strategic model, structure, principles | Low (months) |
+| `docs/adr/*.md` | Individual architectural decisions | Low, one per decision |
+| `specs/**/*.md` | Behavior of concrete features | High (per feature) |
+| Code in `src/` | Implementation that respects everything above | Very high |
+
+**Influence flow:** ARCHITECTURE → ADRs → specs → code.
+
+**Learning flow (feedback):** code → discovery → refined spec → sometimes ARCHITECTURE updated or new ADR.
+
+---
+
+## How to work with Claude Code using specs
+
+The typical flow is:
 
 ```
-1. Escribir spec en specs/<contexto>/NNN-nombre.md, estado Draft.
-2. Autorevisión. Pasar a Review.
-3. Si hay otro reviewer, esperar. Pasar a Accepted cuando esté aprobada.
-4. Escribir plan de implementación (puede ser en el mismo PR que la spec).
-5. Abrir sesión con Claude Code:
-   - Referenciar: @specs/<contexto>/NNN-nombre.md
-   - Referenciar: @CLAUDE.md
-   - Instrucción: "Implementá la spec siguiendo el plan. Empezá por los tests del agregado. Mostrá diffs antes de aplicar cambios grandes."
-6. Revisar código generado:
-   - ¿Cumple los escenarios?
-   - ¿Respeta invariantes?
-   - ¿Sigue las reglas de CLAUDE.md?
-7. Tests pasan, code review interno → merge.
-8. Actualizar estado de spec a Implemented.
+1. Write spec in specs/<context>/NNN-name.md, status Draft.
+2. Self-review. Move to Review.
+3. If there's another reviewer, wait. Move to Accepted when approved.
+4. Write implementation plan (can be in the same PR as the spec).
+5. Open session with Claude Code:
+   - Reference: @specs/<context>/NNN-name.md
+   - Reference: @CLAUDE.md
+   - Instruction: "Implement the spec following the plan. Start with aggregate tests. Show diffs before applying large changes."
+6. Review generated code:
+   - Does it fulfill the scenarios?
+   - Does it respect invariants?
+   - Does it follow the rules in CLAUDE.md?
+7. Tests pass, internal code review → merge.
+8. Update spec status to Implemented.
 ```
 
-**Antipatrón a evitar:** abrir Claude Code y pedirle "implementá la feature de ajustar plan" sin spec. El agente va a inventar estructura, y en cada sesión va a inventar una distinta.
+**Anti-pattern to avoid:** opening Claude Code and asking "implement the plan adjustment feature" without a spec. The agent will invent structure, and in each session it will invent a different one.
 
 ---
 
-## Sobre granularidad de specs
+## Spec granularity
 
-Una spec ≠ una user story pequeña, pero tampoco una épica enorme.
+One spec ≠ a small user story, but also not a huge epic.
 
-**Demasiado grande:** "Sistema de planificación de entrenamiento". Esto es un módulo, no una spec. Se descompone en múltiples specs.
+**Too large:** "Training planning system". This is a module, not a spec. Decompose it into multiple specs.
 
-**Demasiado chico:** "Validar que el título del plan no esté vacío". Eso es una invariante, parte de una spec más grande.
+**Too small:** "Validate that the plan title is not empty". That's an invariant, part of a larger spec.
 
-**Tamaño correcto:** "Ajustar semana de entrenamiento". Una feature cohesiva, con un command o dos, 3-5 escenarios de aceptación, una historia de usuario clara.
+**Right size:** "Adjust training week". A cohesive feature, with one or two commands, 3-5 acceptance scenarios, a clear user story.
 
-Regla: si la spec entra en ~2-4 horas de implementación total, probablemente está en el tamaño correcto.
-
----
-
-## Mantenimiento del directorio
-
-- Specs implementadas **no se borran**. La historia importa.
-- Si una feature cambia de forma breaking, se crea spec nueva (ej. `002-adjust-training-week-v2.md`) y se marca la anterior como `Deprecated` con link a la nueva.
-- Cada trimestre, revisar specs `Draft` que nunca avanzaron y decidir: retomar, promover, o descartar.
+Rule: if the spec fits in ~2-4 hours of total implementation, it's probably the right size.
 
 ---
 
-## Proceso para proponer cambios al template
+## Directory maintenance
 
-Si durante el uso detectás que al template le falta algo o sobra algo:
-
-1. Abrir issue describiendo la fricción.
-2. Discutir en PR con propuesta de cambio a `_template.md`.
-3. Una vez aceptado, aplicar retroactivamente a specs futuras (no reescribir las existentes salvo necesidad).
+- Implemented specs **are not deleted**. History matters.
+- If a feature changes in a breaking way, create a new spec (e.g. `002-adjust-training-week-v2.md`) and mark the previous one as `Deprecated` with a link to the new one.
+- Every quarter, review `Draft` specs that never advanced and decide: resume, promote, or discard.
 
 ---
 
-*El template es un punto de partida, no una jaula. Si una spec específica necesita secciones adicionales o diferentes, es válido siempre que los fundamentos (contexto de dominio, invariantes, escenarios) estén.*
+## Process for proposing changes to the template
+
+If during use you detect that the template is missing something or has something unnecessary:
+
+1. Open an issue describing the friction.
+2. Discuss in a PR with a proposed change to `_template.md`.
+3. Once accepted, apply retroactively to future specs (don't rewrite existing ones unless necessary).
+
+---
+
+*The template is a starting point, not a cage. If a specific spec needs additional or different sections, that's valid as long as the fundamentals (domain context, invariants, scenarios) are present.*

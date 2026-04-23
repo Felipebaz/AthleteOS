@@ -1,70 +1,70 @@
-# ADR-NNNN: Título corto y descriptivo
+# ADR-NNNN: Short and descriptive title
 
-- **Fecha:** YYYY-MM-DD
-- **Estado:** Propuesto | Aceptado | Deprecado | Reemplazado por ADR-NNNN
-- **Decididores:** Felipe (y quien más haya participado)
-- **Contexto técnico relacionado:** referencias a niveles del ARCHITECTURE.md o a otros ADRs
+- **Date:** YYYY-MM-DD
+- **Status:** Proposed | Accepted | Deprecated | Superseded by ADR-NNNN
+- **Deciders:** Felipe (and whoever else participated)
+- **Related technical context:** references to ARCHITECTURE.md levels or other ADRs
 
-## Contexto y problema
+## Context and problem
 
-Descripción del problema que motiva la decisión. ¿Qué estamos tratando de resolver? ¿Qué restricciones existen? ¿Qué forzó que esta decisión tenga que tomarse ahora?
+Description of the problem that motivates the decision. What are we trying to solve? What constraints exist? What forced this decision to be made now?
 
-2-4 párrafos máximo. Si no podés explicar el problema en ese espacio, el problema no está claro todavía.
+2-4 paragraphs max. If you can't explain the problem in that space, the problem isn't clear yet.
 
-## Fuerzas en tensión
+## Forces in tension
 
-Lista de factores que tensionan la decisión. Ejemplo:
+List of factors that create tension in the decision. Example:
 
-- Velocidad de desarrollo vs. calidad a largo plazo.
-- Costo operativo vs. flexibilidad.
-- Complejidad técnica vs. familiaridad del equipo.
+- Development speed vs. long-term quality.
+- Operational cost vs. flexibility.
+- Technical complexity vs. team familiarity.
 
-## Alternativas consideradas
+## Alternatives considered
 
-### Alternativa 1: [Nombre corto]
+### Alternative 1: [Short name]
 
-Descripción breve. Pros. Contras. Por qué no se eligió.
+Brief description. Pros. Cons. Why it wasn't chosen.
 
-### Alternativa 2: [Nombre corto]
+### Alternative 2: [Short name]
 
-Idem.
+Same.
 
-### Alternativa 3: [Nombre corto]
+### Alternative 3: [Short name]
 
-Idem.
+Same.
 
-## Decisión
+## Decision
 
-La decisión tomada, enunciada con claridad. Una frase si se puede.
+The decision made, stated clearly. One sentence if possible.
 
-Después, el razonamiento principal: ¿por qué esta alternativa ganó? ¿Qué fuerza pesó más?
+Then, the main reasoning: why did this alternative win? What force weighed more?
 
-## Consecuencias
+## Consequences
 
-### Positivas
+### Positive
 
-- Qué se gana con esta decisión.
-- Qué se habilita.
+- What is gained with this decision.
+- What it enables.
 
-### Negativas / Trade-offs aceptados
+### Negative / Accepted trade-offs
 
-- Qué se sacrifica.
-- Qué problemas futuros probables introduce.
+- What is sacrificed.
+- What probable future problems it introduces.
 
-### Neutrales
+### Neutral
 
-- Efectos laterales que no son ni positivos ni negativos.
+- Side effects that are neither positive nor negative.
 
-## Cuándo reevaluar esta decisión
+## When to revisit this decision
 
-Señales concretas que indicarían que la decisión debe revisarse:
+Concrete signals that would indicate the decision should be reviewed:
 
-- Ejemplo: "Si la tasa de errores de X supera el Y%".
-- Ejemplo: "Si el equipo crece a más de Z personas".
-- Ejemplo: "Si el proveedor Z cambia su modelo de pricing".
+- Example: "If the error rate of X exceeds Y%".
+- Example: "If the team grows beyond Z people".
+- Example: "If provider Z changes its pricing model".
 
-## Referencias
+## References
 
-- Links a documentación relevante.
-- Libros o artículos que influyeron.
-- Otros ADRs relacionados.
+- Links to relevant documentation.
+- Books or articles that influenced the decision.
+- Other related ADRs.

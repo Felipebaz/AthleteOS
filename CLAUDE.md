@@ -1,29 +1,29 @@
 # CLAUDE.md
 
-> Briefing para agentes de IA (Claude Code) trabajando en este repositorio.
-> Los humanos leen el [README](./README.md). Vos leés esto.
+> Briefing for AI agents (Claude Code) working in this repository.
+> Humans read the [README](./README.md). You read this.
 
 ---
 
-## Regla de oro
+## Golden rule
 
-**Antes de escribir código, leé `docs/ARCHITECTURE.md`.** Ahí están los 15 niveles de arquitectura del proyecto: problema, requisitos, bounded contexts, agregados, flujos, stack, roadmap. Todo lo que necesitás para trabajar con criterio está ahí. Este archivo es el mapa hacia ese documento y las reglas operativas que lo complementan.
+**Before writing any code, read `docs/ARCHITECTURE.md`.** It contains the 15 architecture levels of the project: problem, requirements, bounded contexts, aggregates, flows, stack, roadmap. Everything you need to work with sound judgment is there. This file is the map to that document and the operational rules that complement it.
 
-Si te pido algo que contradice `docs/ARCHITECTURE.md`, **preguntá antes de actuar**. El documento de arquitectura es la fuente de verdad; este archivo opera dentro de sus reglas.
-
----
-
-## Qué es este proyecto en 3 líneas
-
-Plataforma SaaS B2B para coaches de deportes de endurance (running, ciclismo, triatlón, natación) que gestionan atletas a distancia. Ingiere datos de wearables (Strava, Garmin, Polar), analiza con IA, y presenta al coach un dashboard priorizado con sugerencias accionables que el coach aprueba. El usuario pagante es el coach, no el atleta.
-
-**Nombre actual:** placeholder (`AthleteOS` / `CoachLens`). No es definitivo. No dedicarle tiempo.
-
-**Fase actual:** `[ACTUALIZAR: Fase 0 - Validación | Fase 1 - Fundaciones | Fase 2 - Ingesta | etc.]`
+If you're asked to do something that contradicts `docs/ARCHITECTURE.md`, **ask before acting**. The architecture document is the source of truth; this file operates within its rules.
 
 ---
 
-## Stack en una pantalla
+## What this project is in 3 lines
+
+B2B SaaS platform for endurance sports coaches (running, cycling, triathlon, swimming) who manage athletes remotely. Ingests data from wearables (Strava, Garmin, Polar), analyzes it with AI, and presents the coach with a prioritized dashboard with actionable suggestions that the coach approves. The paying user is the coach, not the athlete.
+
+**Current name:** placeholder (`AthleteOS` / `CoachLens`). Not final. Don't spend time on it.
+
+**Current phase:** `[UPDATE: Phase 0 - Validation | Phase 1 - Foundations | Phase 2 - Ingestion | etc.]`
+
+---
+
+## Stack at a glance
 
 ```
 Backend:     C# / .NET 8 + ASP.NET Core Minimal APIs + EF Core 8 + MediatR
@@ -31,46 +31,46 @@ Backend:     C# / .NET 8 + ASP.NET Core Minimal APIs + EF Core 8 + MediatR
 Data:        PostgreSQL 16 + TimescaleDB + pgvector + Redis
 Frontend:    React 18 + TypeScript + Vite + TanStack (Query/Router) + Zustand
              Tailwind + shadcn/ui + Vitest + Playwright
-IA:          Anthropic Claude via API (structured outputs)
-Monorepo:    pnpm workspaces + Turborepo (frontends). Backend en repo separado o carpeta.
-Infra MVP:   Railway o Fly.io + Cloudflare R2 (storage) + Cloudflare CDN
+AI:          Anthropic Claude via API (structured outputs)
+Monorepo:    pnpm workspaces + Turborepo (frontends). Backend in separate repo or folder.
+Infra MVP:   Railway or Fly.io + Cloudflare R2 (storage) + Cloudflare CDN
 CI/CD:       GitHub Actions + Docker
 Testing:     MSTest + FluentAssertions + Testcontainers + Bogus + NSubstitute
 ```
 
-Detalle completo y justificaciones en `docs/ARCHITECTURE.md` nivel 13.
+Full detail and justifications in `docs/ARCHITECTURE.md` level 13.
 
 ---
 
-## Bounded contexts (qué partes hay)
+## Bounded contexts (what parts exist)
 
-El sistema es un **monolito modular** organizado por bounded contexts (DDD). Cada uno tiene su dominio, su schema de DB y sus endpoints aislados.
+The system is a **modular monolith** organized by bounded contexts (DDD). Each has its own domain, its own DB schema, and isolated endpoints.
 
-| Contexto | Tipo | Qué hace |
-|----------|------|---------|
-| `Identity` | Generic | Auth, usuarios, tenants, invitaciones |
-| `AthleteProfile` | Supporting | Perfil deportivo, zonas, objetivos, lesiones |
-| `TrainingData` | Supporting | Ingesta y normalización de datos externos |
-| `Coaching` | **Core** | Planes, ejecución, relación coach-atleta |
-| `Intelligence` | **Core** | Readiness, sugerencias, aprendizaje |
-| `Communication` | Supporting | Mensajería, notificaciones |
-| `Billing` | Generic | Suscripciones, pagos (fase 2) |
+| Context | Type | What it does |
+|---------|------|--------------|
+| `Identity` | Generic | Auth, users, tenants, invitations |
+| `AthleteProfile` | Supporting | Sports profile, zones, goals, injuries |
+| `TrainingData` | Supporting | External data ingestion and normalization |
+| `Coaching` | **Core** | Plans, execution, coach-athlete relationship |
+| `Intelligence` | **Core** | Readiness, suggestions, learning |
+| `Communication` | Supporting | Messaging, notifications |
+| `Billing` | Generic | Subscriptions, payments (phase 2) |
 
-**Regla fundamental:** los módulos NO se referencian entre sí por código. Se comunican por:
-1. **Integration events** (asincrónicos, vía outbox + bus).
-2. **Public API de módulo** (interfaces expuestas en `ModuleX.Contracts`).
+**Fundamental rule:** modules do NOT reference each other by code. They communicate via:
+1. **Integration events** (asynchronous, via outbox + bus).
+2. **Module public API** (interfaces exposed in `ModuleX.Contracts`).
 
-Si estás tentado a hacer `using Coaching.Domain` desde `Intelligence.Application`, **parálo y pedí orientación**. Probablemente necesitás un evento o un contract.
+If you're tempted to do `using Coaching.Domain` from `Intelligence.Application`, **stop and ask for guidance**. You probably need an event or a contract.
 
 ---
 
-## Reglas de arquitectura no negociables
+## Non-negotiable architecture rules
 
-Estas son las reglas que mantienen el proyecto sano. Violarlas causa dolor técnico a futuro y se rechaza en code review.
+These are the rules that keep the project healthy. Violating them causes future technical pain and will be rejected in code review.
 
-### 1. Clean Architecture estricta
+### 1. Strict Clean Architecture
 
-Dependencias apuntan hacia el dominio:
+Dependencies point toward the domain:
 
 ```
 Api ──► Application ──► Domain
@@ -78,97 +78,97 @@ Api ──► Application ──► Domain
  └──► Infrastructure ──► Application ──► Domain
 ```
 
-- `Domain` no depende de nada (ni siquiera de `Microsoft.*` fuera de `System.*`).
-- `Application` depende solo de `Domain` (y de `BuildingBlocks.Application`).
-- `Infrastructure` implementa interfaces declaradas en `Domain` o `Application`.
-- `Api` compone todo.
+- `Domain` depends on nothing (not even `Microsoft.*` beyond `System.*`).
+- `Application` depends only on `Domain` (and `BuildingBlocks.Application`).
+- `Infrastructure` implements interfaces declared in `Domain` or `Application`.
+- `Api` composes everything.
 
-**Verificación:** si estás escribiendo una clase `EntityFrameworkRepository` dentro de `Domain`, estás mal. Si en `Domain` hay un `using Microsoft.EntityFrameworkCore`, estás mal.
+**Check:** if you're writing an `EntityFrameworkRepository` class inside `Domain`, something's wrong. If `Domain` has a `using Microsoft.EntityFrameworkCore`, something's wrong.
 
-### 2. Un caso de uso = un agregado
+### 2. One use case = one aggregate
 
-Un command handler modifica **un solo agregado**. Si parece que necesitás modificar dos, reconsiderá:
-- ¿Son realmente el mismo agregado?
-- ¿Debería ser eventual consistency con un evento?
-- ¿Falta un domain service?
+A command handler modifies **one single aggregate**. If it seems like you need to modify two, reconsider:
+- Are they really the same aggregate?
+- Should this be eventual consistency with an event?
+- Is a domain service missing?
 
-Nunca hagas transacciones que toquen 2 agregados distintos con el mismo `SaveChanges`.
+Never do transactions that touch 2 distinct aggregates with the same `SaveChanges`.
 
-### 3. Outbox pattern para eventos de integración
+### 3. Outbox pattern for integration events
 
-Eventos cross-context **siempre** pasan por outbox:
-1. Command handler modifica agregado.
-2. En la misma transacción, se inserta evento en tabla `outbox`.
-3. Worker `OutboxPublisher` lee outbox y publica al bus.
-4. Consumidores registran en tabla `inbox` para idempotencia.
+Cross-context events **always** go through outbox:
+1. Command handler modifies aggregate.
+2. In the same transaction, event is inserted into `outbox` table.
+3. `OutboxPublisher` worker reads outbox and publishes to bus.
+4. Consumers register in `inbox` table for idempotency.
 
-Nunca publiques al bus directamente desde un handler. Nunca.
+Never publish to the bus directly from a handler. Never.
 
 ### 4. Strongly-typed IDs
 
-No usar `Guid` crudo como identificador en dominio. Siempre wrappers tipados:
+Never use raw `Guid` as an identifier in the domain. Always use typed wrappers:
 
 ```csharp
 public readonly record struct AthleteId(Guid Value);
 public readonly record struct TrainingPlanId(Guid Value);
 ```
 
-EF Core convierte automáticamente con `ValueConverter` configurado en `BuildingBlocks.Infrastructure`.
+EF Core converts automatically with `ValueConverter` configured in `BuildingBlocks.Infrastructure`.
 
 ### 5. Tenant isolation
 
-Cada tabla de negocio tiene `tenant_id` NOT NULL. Nunca lo omitas en:
-- Creación de entidades.
-- Queries (siempre filtrar).
+Every business table has `tenant_id` NOT NULL. Never omit it in:
+- Entity creation.
+- Queries (always filter).
 - Migrations.
 
-Row Level Security (RLS) de PostgreSQL está habilitado. Si tu query bypass RLS, el test fallará.
+PostgreSQL Row Level Security (RLS) is enabled. If your query bypasses RLS, the test will fail.
 
-### 6. No LLM en el dominio
+### 6. No LLM in the domain
 
-Las llamadas a Anthropic viven **solo en `Intelligence.Infrastructure.Llm`**. El dominio de Intelligence no sabe qué proveedor está abajo. Depende de `IInsightGenerator`.
+Anthropic calls live **only in `Intelligence.Infrastructure.Llm`**. The Intelligence domain doesn't know what provider is underneath. It depends on `IInsightGenerator`.
 
-Misma regla para cualquier servicio externo: adapter en Infrastructure, interface en Application o Domain.
+Same rule for any external service: adapter in Infrastructure, interface in Application or Domain.
 
-### 7. Eventos de dominio != eventos de integración
+### 7. Domain events != integration events
 
-- **Domain events:** in-process, dentro del mismo bounded context, despachados por MediatR dentro de la unidad de trabajo. Sufijo: `DomainEvent`.
-- **Integration events:** cross-context, asincrónicos, via outbox. Sufijo: `IntegrationEvent`.
+- **Domain events:** in-process, within the same bounded context, dispatched by MediatR within the unit of work. Suffix: `DomainEvent`.
+- **Integration events:** cross-context, asynchronous, via outbox. Suffix: `IntegrationEvent`.
 
-No los confundas. Un `TrainingPlanCreatedDomainEvent` puede disparar lógica interna del módulo Coaching. Un `TrainingPlanCreatedIntegrationEvent` puede ser consumido por Communication para notificar al atleta.
+Don't confuse them. A `TrainingPlanCreatedDomainEvent` can trigger internal logic of the Coaching module. A `TrainingPlanCreatedIntegrationEvent` can be consumed by Communication to notify the athlete.
 
-### 8. Result pattern, no excepciones para flujo
+### 8. Result pattern, not exceptions for flow
 
-Errores esperables (validación, recurso no encontrado, regla de negocio violada) se devuelven como `Result<T>` o `Result`. Excepciones solo para errores realmente excepcionales (bug, infraestructura caída).
+Expected errors (validation, resource not found, business rule violated) are returned as `Result<T>` or `Result`. Exceptions only for truly exceptional errors (bug, infrastructure down).
 
 ```csharp
-// Bien
+// Good
 return Result.Failure<AthleteDto>(AthleteErrors.NotFound);
 
-// Mal (para errores esperables)
+// Bad (for expected errors)
 throw new NotFoundException("Athlete not found");
 ```
 
-Invariantes violadas en agregados sí lanzan excepciones del dominio (`InvalidPlanAdjustmentException`), porque representan un bug del caller.
+Violated invariants in aggregates do throw domain exceptions (`InvalidPlanAdjustmentException`), because they represent a caller bug.
 
-### 9. Tests son parte del Definition of Done
+### 9. Tests are part of the Definition of Done
 
-- Cobertura mínima: Domain 90%+, Application 70%+, global 60%+.
-- Todo caso de uso nuevo necesita test.
-- Todo agregado nuevo necesita tests de invariantes.
-- Tests de integración con Testcontainers (PostgreSQL real, no in-memory).
-- No se mergea si CI está rojo.
+- Minimum coverage: Domain 90%+, Application 70%+, global 60%+.
+- Every new use case needs a test.
+- Every new aggregate needs invariant tests.
+- Integration tests with Testcontainers (real PostgreSQL, not in-memory).
+- Don't merge if CI is red.
 
-### 10. Observabilidad desde el inicio
+### 10. Observability from the start
 
-Código nuevo debe tener:
-- Logs estructurados con Serilog (nivel apropiado, no `Console.WriteLine`).
-- Métricas OpenTelemetry si es operación relevante.
-- Manejo de errores que preserve contexto (Sentry con tags útiles).
+New code must have:
+- Structured logs with Serilog (appropriate level, no `Console.WriteLine`).
+- OpenTelemetry metrics if it's a relevant operation.
+- Error handling that preserves context (Sentry with useful tags).
 
 ---
 
-## Estructura de carpetas del backend
+## Backend folder structure
 
 ```
 src/
@@ -184,11 +184,11 @@ src/
 │   │   ├── {ModuleName}.Application/
 │   │   ├── {ModuleName}.Infrastructure/
 │   │   ├── {ModuleName}.Api/
-│   │   └── {ModuleName}.Contracts/        # public API para otros módulos (opcional)
+│   │   └── {ModuleName}.Contracts/        # public API for other modules (optional)
 │   └── ...
 │
 ├── Bootstrap/
-│   └── ApiHost/                           # Program.cs, compone módulos
+│   └── ApiHost/                           # Program.cs, composes modules
 │
 └── Workers/
     ├── SyncWorker/
@@ -204,247 +204,247 @@ tests/
 └── E2E/
 ```
 
-**Al crear un módulo nuevo:** seguir la estructura interna detallada en `docs/ARCHITECTURE.md` nivel 13.1.
+**When creating a new module:** follow the internal structure detailed in `docs/ARCHITECTURE.md` level 13.1.
 
 ---
 
-## Convenciones de código
+## Code conventions
 
-### Nombres
+### Naming
 
-- **Clases, records, structs:** `PascalCase`.
-- **Métodos, propiedades:** `PascalCase`.
-- **Variables locales, parámetros:** `camelCase`.
-- **Campos privados:** `_camelCase` con underscore.
-- **Constantes:** `PascalCase` (no SCREAMING_SNAKE).
-- **Archivos:** un tipo público por archivo, nombre == tipo.
+- **Classes, records, structs:** `PascalCase`.
+- **Methods, properties:** `PascalCase`.
+- **Local variables, parameters:** `camelCase`.
+- **Private fields:** `_camelCase` with underscore.
+- **Constants:** `PascalCase` (not SCREAMING_SNAKE).
+- **Files:** one public type per file, name == type.
 
-### Nombres de dominio
+### Domain names
 
-- **Sí:** `TrainingPlan`, `Athlete`, `CoachSuggestion`, `ReadinessSnapshot`, `ApplyCoachSuggestionCommand`.
+- **Yes:** `TrainingPlan`, `Athlete`, `CoachSuggestion`, `ReadinessSnapshot`, `ApplyCoachSuggestionCommand`.
 - **No:** `UserManager`, `DataHelper`, `ProcessorService`, `UtilClass`.
 
-Los nombres reflejan el **lenguaje ubicuo del negocio**, no patrones técnicos.
+Names reflect the **business ubiquitous language**, not technical patterns.
 
-### Idioma
+### Language
 
-- **Código (clases, variables, métodos):** inglés. Siempre.
-- **Comentarios:** español o inglés, consistente en el archivo.
-- **Commits:** Conventional Commits en español.
-- **Docs (README, ADRs, este archivo):** español.
-- **Mensajes de log:** inglés (más fácil de buscar).
-- **Strings visibles al usuario:** español (i18n preparada).
+- **Code (classes, variables, methods):** English. Always.
+- **Comments:** English. Always.
+- **Commits:** Conventional Commits in English.
+- **Docs (README, ADRs, this file):** English.
+- **Log messages:** English (easier to search).
+- **User-facing strings:** English (i18n prepared for future localization).
 
-### Commits (Conventional Commits en español)
+### Commits (Conventional Commits in English)
 
-Formato: `<tipo>(<scope>): <descripción corta>`
+Format: `<type>(<scope>): <short description>`
 
-Tipos usados: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `perf`, `build`, `ci`.
+Types used: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `perf`, `build`, `ci`.
 
-Ejemplos:
+Examples:
 
 ```
-feat(coaching): agregar ajuste de semana con versionado
-fix(training-data): corregir matcheo de actividad con sesión planificada
-refactor(intelligence): extraer cálculo de readiness a domain service
-test(coaching): cubrir invariantes de progresión de carga
-docs(adr): agregar ADR sobre elección de outbox pattern
-chore(deps): actualizar MediatR a 12.2.0
+feat(coaching): add week adjustment with versioning
+fix(training-data): fix activity matching with planned session
+refactor(intelligence): extract readiness calculation to domain service
+test(coaching): cover load progression invariants
+docs(adr): add ADR on outbox pattern decision
+chore(deps): update MediatR to 12.2.0
 ```
 
-Scope = módulo o área (`coaching`, `intelligence`, `infra`, `ci`, etc.).
+Scope = module or area (`coaching`, `intelligence`, `infra`, `ci`, etc.).
 
 ### Branches
 
 Gitflow:
-- `main` — producción.
-- `develop` — integración continua, ambiente `dev`.
-- `feature/<nombre-descriptivo>` — features nuevas.
-- `fix/<nombre>` — bugfixes.
-- `hotfix/<nombre>` — parches urgentes desde main.
-- `release/<version>` — estabilización pre-prod.
+- `main` — production.
+- `develop` — continuous integration, `dev` environment.
+- `feature/<descriptive-name>` — new features.
+- `fix/<name>` — bugfixes.
+- `hotfix/<name>` — urgent patches from main.
+- `release/<version>` — pre-prod stabilization.
 
-**Nunca commitear directo a `main` ni a `develop`.** Siempre PR.
-
----
-
-## Cuando te pido implementar algo nuevo
-
-Seguí esta checklist mental:
-
-1. **¿Está en `docs/ARCHITECTURE.md`?** Referenciá la sección. Si lo que pido contradice el doc, preguntá primero.
-2. **¿A qué bounded context pertenece?** Si toca varios, hay que pensar en eventos.
-3. **¿Es command o query?** Command = pasa por agregado. Query = lectura directa con DTO.
-4. **¿Qué agregado modifica?** Solo uno.
-5. **¿Qué eventos emite?** ¿Domain event o integration event?
-6. **¿Qué invariantes tiene que preservar?**
-7. **¿Qué tests necesita?** Unit del agregado + unit del handler + integration si hay repo nuevo.
-8. **¿Requiere cambio en DB?** Migration reversible. Nunca tocar migrations ya aplicadas en prod.
-9. **¿Afecta la API pública?** Actualizar contratos, versionar si es breaking.
-10. **¿Toca secretos o datos sensibles?** Extra cuidado con cifrado, logs, auditoría.
-
-Al terminar: **¿actualicé docs si cambió arquitectura? ¿agregué ADR si fue decisión importante?**
+**Never commit directly to `main` or `develop`.** Always via PR.
 
 ---
 
-## Cuando te pido algo y no sé bien qué quiero
+## When you're asked to implement something new
 
-Si la solicitud es ambigua o demasiado amplia, **no implementes a ciegas**. Respondé con:
+Follow this mental checklist:
 
-1. Tu interpretación de lo que pedí.
-2. 2-3 preguntas concretas de clarificación.
-3. Una propuesta de enfoque.
+1. **Is it in `docs/ARCHITECTURE.md`?** Reference the section. If what's asked contradicts the doc, ask first.
+2. **Which bounded context does it belong to?** If it touches several, think about events.
+3. **Is it a command or query?** Command = goes through aggregate. Query = direct read with DTO.
+4. **Which aggregate does it modify?** Only one.
+5. **What events does it emit?** Domain event or integration event?
+6. **What invariants does it need to preserve?**
+7. **What tests does it need?** Unit for aggregate + unit for handler + integration if there's a new repo.
+8. **Does it require a DB change?** Reversible migration. Never touch migrations already applied in prod.
+9. **Does it affect the public API?** Update contracts, version if breaking.
+10. **Does it touch secrets or sensitive data?** Extra care with encryption, logs, auditing.
 
-Ejemplo de mala respuesta: implementar 4 archivos y 200 líneas ante "agregá la feature de notificaciones".
-
-Ejemplo de buena respuesta: "Entiendo que querés notificaciones cuando el plan se ajusta. Antes de implementar: (a) ¿web push, email, ambos? (b) ¿solo atleta o también coach? (c) ¿qué eventos gatillan notificaciones?"
-
----
-
-## Lo que NO debés hacer (ni aunque te lo pida)
-
-- **No instalar paquetes sin preguntar.** Dependencias nuevas requieren evaluación.
-- **No migrar a otro ORM/DB/framework por impulso.** Cambios de stack son ADRs.
-- **No borrar tests.** Si un test falla, se arregla el código o se entiende el test. Borrarlo es regresión silenciosa.
-- **No commitear secretos.** Ni siquiera en branches de feature. Ni "temporalmente".
-- **No desactivar checks de CI para hacer merge.** Si CI falla, se arregla.
-- **No introducir microservicios.** Monolito modular hasta que haya razón de negocio para partir. Decisión está en ADR-001.
-- **No escribir código sin tests** en módulos de dominio (core).
-- **No optimizar prematuramente.** Medí primero. Optimizá después.
-- **No reescribir código que funciona** "porque se ve feo", salvo que haya motivo claro.
-- **No generar migrations destructivas** sin confirmación explícita del usuario.
+When done: **did I update docs if architecture changed? Did I add an ADR if it was an important decision?**
 
 ---
 
-## Datos sensibles y seguridad
+## When asked for something unclear
 
-Este producto maneja **datos de salud** (HRV, sueño, peso, lesiones). Categoría especial bajo GDPR/LGPD/ley 18.331 de Uruguay.
+If the request is ambiguous or too broad, **don't implement blindly**. Respond with:
 
-### Tratamiento obligatorio
+1. Your interpretation of what was requested.
+2. 2-3 concrete clarification questions.
+3. A proposed approach.
 
-- Tokens OAuth de wearables (Garmin, Strava): **cifrados a nivel aplicación** antes de persistir.
-- Datos médicos/lesiones: cifrados en reposo, nunca en logs.
-- PII (emails, nombres): nunca en logs de error con detalles.
-- Mensajes coach-atleta: nunca en logs, nunca enviados a LLM sin redacción si contienen datos identificables.
+Bad response example: implement 4 files and 200 lines when asked to "add the notifications feature".
 
-### Logs seguros
+Good response example: "I understand you want notifications when the plan is adjusted. Before implementing: (a) web push, email, or both? (b) only the athlete or the coach too? (c) which events trigger notifications?"
+
+---
+
+## What you must NOT do (even if asked)
+
+- **Don't install packages without asking.** New dependencies require evaluation.
+- **Don't migrate to another ORM/DB/framework on impulse.** Stack changes are ADRs.
+- **Don't delete tests.** If a test fails, fix the code or understand the test. Deleting it is silent regression.
+- **Don't commit secrets.** Not even in feature branches. Not even "temporarily".
+- **Don't disable CI checks to merge.** If CI fails, fix it.
+- **Don't introduce microservices.** Modular monolith until there's a business reason to split. Decision is in ADR-001.
+- **Don't write code without tests** in domain modules (core).
+- **Don't optimize prematurely.** Measure first. Optimize after.
+- **Don't rewrite working code** "because it looks ugly", unless there's a clear reason.
+- **Don't generate destructive migrations** without explicit user confirmation.
+
+---
+
+## Sensitive data and security
+
+This product handles **health data** (HRV, sleep, weight, injuries). Special category under GDPR/LGPD/Uruguay Law 18.331.
+
+### Required treatment
+
+- Wearable OAuth tokens (Garmin, Strava): **encrypted at application level** before persisting.
+- Medical/injury data: encrypted at rest, never in logs.
+- PII (emails, names): never in error logs with details.
+- Coach-athlete messages: never in logs, never sent to LLM without redaction if they contain identifiable data.
+
+### Safe logs
 
 ```csharp
-// Mal
+// Bad
 _logger.LogInformation("Sync for athlete {Email} starting", athlete.Email);
 
-// Bien
+// Good
 _logger.LogInformation("Sync for athlete {AthleteId} starting", athlete.Id);
 ```
 
-PII solo en audit log dedicado, no en logs operacionales.
+PII only in dedicated audit log, not in operational logs.
 
-### Acceso a datos sensibles
+### Access to sensitive data
 
-Cualquier lectura por parte de admin/staff de datos de coach o atleta se loguea en audit log. No hay "ojear" sin registro.
-
----
-
-## Trabajando con IA (Claude en el producto)
-
-El sistema usa Claude de Anthropic para:
-- Generación de sugerencias al coach.
-- Generación de planes draft.
-- Explicaciones narrativas de análisis.
-
-### Reglas
-
-1. **Nunca en el dominio.** Siempre detrás de `IInsightGenerator` u otro puerto.
-2. **Siempre structured outputs.** Nunca parsear texto libre para decisiones de negocio. Pedí JSON con schema, validá con FluentValidation.
-3. **Prompts versionados.** Viven en archivos (`Intelligence/Infrastructure/Llm/Prompts/v1/weekly-review.md`). Bump de versión al cambiar.
-4. **Logging completo.** Cada llamada: prompt enviado, respuesta recibida, versión del prompt, latencia, tokens, costo estimado.
-5. **Caching agresivo.** Respuestas idénticas a contextos idénticos no se vuelven a calcular (clave = hash del prompt + contexto).
-6. **Coach-in-the-loop siempre.** Ninguna sugerencia se aplica sin aprobación humana. Ninguna.
-7. **Reglas duras del dominio no se violan por sugerencia IA.** Si el LLM sugiere algo que viola progresión de carga, la capa de aplicación lo rechaza antes de llegar al coach.
+Any admin/staff read of coach or athlete data is logged in audit log. There's no "peeking" without a record.
 
 ---
 
-## Comandos útiles (actualizar a medida que se creen)
+## Working with AI (Claude in the product)
+
+The system uses Anthropic's Claude for:
+- Generating suggestions for the coach.
+- Generating plan drafts.
+- Narrative explanations of analyses.
+
+### Rules
+
+1. **Never in the domain.** Always behind `IInsightGenerator` or another port.
+2. **Always structured outputs.** Never parse free text for business decisions. Request JSON with schema, validate with FluentValidation.
+3. **Versioned prompts.** They live in files (`Intelligence/Infrastructure/Llm/Prompts/v1/weekly-review.md`). Version bump when changing.
+4. **Full logging.** Each call: prompt sent, response received, prompt version, latency, tokens, estimated cost.
+5. **Aggressive caching.** Identical responses to identical contexts are not recalculated (key = hash of prompt + context).
+6. **Coach-in-the-loop always.** No suggestion is applied without human approval. None.
+7. **Hard domain rules are never violated by AI suggestion.** If the LLM suggests something that violates load progression, the application layer rejects it before reaching the coach.
+
+---
+
+## Useful commands (update as they're created)
 
 ```bash
 # Backend .NET
-dotnet build                            # build de toda la solución
-dotnet test                             # todos los tests
-dotnet test --filter Category=Unit      # solo unit tests
+dotnet build                            # build entire solution
+dotnet test                             # all tests
+dotnet test --filter Category=Unit      # unit tests only
 dotnet ef migrations add <Name> --project src/Modules/<Module>/<Module>.Infrastructure
 dotnet ef database update --project src/Modules/<Module>/<Module>.Infrastructure
 
 # Frontend
-pnpm install                            # instala deps del monorepo
-pnpm dev                                # arranca ambiente dev
+pnpm install                            # install monorepo deps
+pnpm dev                                # start dev environment
 pnpm test                               # tests
-pnpm build                              # build de producción
+pnpm build                              # production build
 pnpm lint                               # lint
 
 # Docker local
-docker compose up -d                    # levanta PostgreSQL, Redis, etc.
-docker compose down                     # detiene todo
-docker compose logs -f <servicio>       # logs
+docker compose up -d                    # start PostgreSQL, Redis, etc.
+docker compose down                     # stop everything
+docker compose logs -f <service>        # logs
 ```
 
 ---
 
-## Dónde está cada cosa
+## Where to find things
 
-| Necesitás... | Andá a... |
-|--------------|-----------|
-| Visión del producto y problema | `docs/ARCHITECTURE.md` nivel 1 |
-| Requisitos funcionales (IDs tipo RF-*) | `docs/ARCHITECTURE.md` nivel 2 |
-| Requisitos no funcionales con metas | `docs/ARCHITECTURE.md` nivel 3 |
-| Principios que guían decisiones | `docs/ARCHITECTURE.md` nivel 4 |
-| Qué bounded contexts hay | `docs/ARCHITECTURE.md` nivel 5 |
-| Vista de despliegue y componentes | `docs/ARCHITECTURE.md` nivel 6 |
-| Modelo de datos y multi-tenancy | `docs/ARCHITECTURE.md` nivel 7 |
-| Modelo de amenazas y defensa | `docs/ARCHITECTURE.md` nivel 8 |
-| Riesgos técnicos y mitigaciones | `docs/ARCHITECTURE.md` nivel 9 |
-| Estructura de módulos del backend | `docs/ARCHITECTURE.md` nivel 10 |
-| Agregados, eventos, casos de uso por contexto | `docs/ARCHITECTURE.md` nivel 11 |
-| Flujos end-to-end paso a paso | `docs/ARCHITECTURE.md` nivel 12 |
-| Stack tecnológico completo con justificación | `docs/ARCHITECTURE.md` nivel 13 |
-| CI/CD, ambientes, infra | `docs/ARCHITECTURE.md` nivel 14 |
-| Roadmap y fases | `docs/ARCHITECTURE.md` nivel 15 |
-| Decisiones arquitectónicas individuales | `docs/adr/` |
-| Glosario del dominio | `docs/ARCHITECTURE.md` Apéndice A |
-
----
-
-## Contacto con el humano
-
-Soy **Felipe**. Estudiante de ingeniería de software en ORT (Uruguay), con experiencia en frontend (React/TypeScript) expandiendo a backend (C#/.NET). Este es mi proyecto de portfolio ambicioso + posible spin-off comercial.
-
-### Preferencias cuando trabajás conmigo
-
-- **Directo y técnico.** Nada de relleno, nada de "¡qué gran idea!". Al punto.
-- **Honestidad ante malas decisiones.** Si lo que pido es malo, decímelo con razones. Prefiero pushback fundamentado que obediencia.
-- **TDD cuando aplica.** Sobre todo en Domain y Application. Red-green-refactor.
-- **Conventional Commits en español.**
-- **Clean Architecture con la nomenclatura Mousqués** (curso ORT) mapeada a nombres estándar: `InterfazUsuario` = Api, `ServiciosAplicacion` = Application, `ReglasNegocio` = Domain, `AccesoDatos` = Infrastructure. En código uso nombres estándar en inglés; en comentarios/docs cualquiera de los dos sirve.
-- **Español rioplatense** en docs y comunicación.
-
-### Cómo respondo bien a vos
-
-- Antes de escribir código complejo, proponeme el enfoque.
-- Si dudás entre dos caminos, mostrámelos y recomendá uno.
-- Explicá el "por qué" de decisiones no obvias.
-- Marcá explícitamente cuándo estás haciendo algo fuera de lo pedido ("agregué X porque Y").
+| You need... | Go to... |
+|-------------|----------|
+| Product vision and problem | `docs/ARCHITECTURE.md` level 1 |
+| Functional requirements (RF-* IDs) | `docs/ARCHITECTURE.md` level 2 |
+| Non-functional requirements with targets | `docs/ARCHITECTURE.md` level 3 |
+| Principles that guide decisions | `docs/ARCHITECTURE.md` level 4 |
+| What bounded contexts exist | `docs/ARCHITECTURE.md` level 5 |
+| Deployment and component view | `docs/ARCHITECTURE.md` level 6 |
+| Data model and multi-tenancy | `docs/ARCHITECTURE.md` level 7 |
+| Threat model and defense | `docs/ARCHITECTURE.md` level 8 |
+| Technical risks and mitigations | `docs/ARCHITECTURE.md` level 9 |
+| Backend module structure | `docs/ARCHITECTURE.md` level 10 |
+| Aggregates, events, use cases per context | `docs/ARCHITECTURE.md` level 11 |
+| End-to-end flows step by step | `docs/ARCHITECTURE.md` level 12 |
+| Full tech stack with justification | `docs/ARCHITECTURE.md` level 13 |
+| CI/CD, environments, infra | `docs/ARCHITECTURE.md` level 14 |
+| Roadmap and phases | `docs/ARCHITECTURE.md` level 15 |
+| Individual architectural decisions | `docs/adr/` |
+| Domain glossary | `docs/ARCHITECTURE.md` Appendix A |
 
 ---
 
-## Actualización de este documento
+## About the human
 
-Este archivo evoluciona. Cuando cambie:
-- Stack → actualizar sección Stack.
-- Reglas de arquitectura → actualizar con referencia a ADR.
-- Fase del proyecto → actualizar arriba.
-- Comandos útiles → agregar a medida que se creen.
+I'm **Felipe**. Software engineering student at ORT (Uruguay), with frontend experience (React/TypeScript) expanding to backend (C#/.NET). This is my ambitious portfolio project + potential commercial spin-off.
 
-Si vas a actualizar este archivo, avisame antes. Es un contrato.
+### Preferences when working with me
+
+- **Direct and technical.** No filler, no "great idea!". To the point.
+- **Honesty about bad decisions.** If what I'm asking for is bad, tell me with reasons. I prefer grounded pushback over compliance.
+- **TDD when applicable.** Especially in Domain and Application. Red-green-refactor.
+- **Conventional Commits in English.**
+- **Clean Architecture with Mousqués naming** (ORT course) mapped to standard names: `InterfazUsuario` = Api, `ServiciosAplicacion` = Application, `ReglasNegocio` = Domain, `AccesoDatos` = Infrastructure. In code I use standard English names; in comments/docs either works.
+- **English** in docs and communication.
+
+### How to respond well to me
+
+- Before writing complex code, propose the approach.
+- If you're choosing between two paths, show me both and recommend one.
+- Explain the "why" of non-obvious decisions.
+- Explicitly note when you're doing something outside what was asked ("added X because Y").
 
 ---
 
-*Última actualización: [fecha]. Si encontrás contradicción entre este archivo y `docs/ARCHITECTURE.md`, el doc de arquitectura gana. Avisame para resolver la inconsistencia.*
+## Updating this document
+
+This file evolves. When it changes:
+- Stack → update Stack section.
+- Architecture rules → update with reference to ADR.
+- Project phase → update above.
+- Useful commands → add as they're created.
+
+If you're going to update this file, let me know first. It's a contract.
+
+---
+
+*Last updated: [date]. If you find a contradiction between this file and `docs/ARCHITECTURE.md`, the architecture doc wins. Let me know to resolve the inconsistency.*

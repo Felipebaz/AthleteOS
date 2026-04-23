@@ -1,143 +1,143 @@
-# Cómo contribuir a AthleteOS
+# How to contribute to AthleteOS
 
-Gracias por considerar contribuir. Este documento describe el proceso y las convenciones. Si sos un agente de IA (Claude Code), leé primero `CLAUDE.md`.
+Thank you for considering contributing. This document describes the process and conventions. If you're an AI agent (Claude Code), read `CLAUDE.md` first.
 
-## Antes de empezar
+## Before you start
 
-1. Leé `README.md` para entender el proyecto.
-2. Leé `docs/ARCHITECTURE.md` (al menos niveles 1-5) para entender el modelo.
-3. Revisá `docs/adr/` para ver decisiones ya tomadas.
-4. Revisá `specs/` para ver specs de features pendientes o en curso.
+1. Read `README.md` to understand the project.
+2. Read `docs/ARCHITECTURE.md` (at least levels 1-5) to understand the model.
+3. Review `docs/adr/` to see decisions already made.
+4. Review `specs/` to see pending or in-progress feature specs.
 
-## Flujo de trabajo
+## Workflow
 
-### Para un bugfix trivial
+### For a trivial bugfix
 
-1. Crear branch `fix/descripcion-corta` desde `develop`.
-2. Hacer el fix.
-3. Agregar test que previene regresión.
-4. Commit con Conventional Commits en español.
-5. PR a `develop`.
+1. Create branch `fix/short-description` from `develop`.
+2. Make the fix.
+3. Add a test that prevents regression.
+4. Commit with Conventional Commits in English.
+5. PR to `develop`.
 
-### Para una feature nueva
+### For a new feature
 
-1. **Escribir spec** en `specs/<bounded-context>/NNN-nombre.md` usando el template (`specs/_template.md`).
-2. Marcar la spec como `Review` y solicitar revisión.
-3. Una vez aceptada (estado `Accepted`), escribir plan de implementación.
-4. Crear branch `feature/<slug>` desde `develop`.
-5. Implementar siguiendo el plan y las reglas de `CLAUDE.md`.
-6. Tests cubriendo todos los escenarios de aceptación de la spec.
-7. PR a `develop` referenciando la spec.
-8. Al mergear, actualizar estado de la spec a `Implemented`.
+1. **Write a spec** in `specs/<bounded-context>/NNN-name.md` using the template (`specs/_template.md`).
+2. Mark the spec as `Review` and request review.
+3. Once accepted (status `Accepted`), write an implementation plan.
+4. Create branch `feature/<slug>` from `develop`.
+5. Implement following the plan and the rules in `CLAUDE.md`.
+6. Tests covering all acceptance scenarios from the spec.
+7. PR to `develop` referencing the spec.
+8. When merged, update the spec status to `Implemented`.
 
-### Para una decisión arquitectónica
+### For an architectural decision
 
-1. Copiar `docs/adr/000-template.md` a `docs/adr/NNNN-titulo.md`.
-2. Completar: contexto, alternativas, decisión, consecuencias.
-3. PR a `develop` para discusión.
-4. Al aprobar, actualizar estado a `Aceptado` y agregar al índice en `docs/adr/README.md`.
+1. Copy `docs/adr/000-template.md` to `docs/adr/NNNN-title.md`.
+2. Fill in: context, alternatives, decision, consequences.
+3. PR to `develop` for discussion.
+4. When approved, update status to `Accepted` and add to the index in `docs/adr/README.md`.
 
-## Convenciones de commits
+## Commit conventions
 
-Seguimos **Conventional Commits en español**. Formato:
+We follow **Conventional Commits in English**. Format:
 
 ```
-<tipo>(<scope>): <descripción corta en imperativo>
+<type>(<scope>): <short description in imperative>
 
-<cuerpo opcional: qué y por qué>
+<optional body: what and why>
 
-<footer opcional: refs, breaking changes>
+<optional footer: refs, breaking changes>
 ```
 
-### Tipos válidos
+### Valid types
 
-| Tipo | Cuándo |
-|------|--------|
-| `feat` | Feature nueva |
+| Type | When |
+|------|------|
+| `feat` | New feature |
 | `fix` | Bugfix |
-| `refactor` | Cambio de código sin cambio de comportamiento |
-| `test` | Agregar o corregir tests |
-| `docs` | Cambios en documentación |
-| `chore` | Tareas de mantenimiento (deps, config) |
-| `perf` | Mejora de performance |
-| `build` | Cambios en build system |
-| `ci` | Cambios en CI/CD |
-| `style` | Formateo, sin cambio de lógica |
+| `refactor` | Code change without behavior change |
+| `test` | Add or fix tests |
+| `docs` | Documentation changes |
+| `chore` | Maintenance tasks (deps, config) |
+| `perf` | Performance improvement |
+| `build` | Build system changes |
+| `ci` | CI/CD changes |
+| `style` | Formatting, no logic change |
 
 ### Scope
 
-Corresponde al módulo o área afectada: `coaching`, `intelligence`, `training-data`, `identity`, `api`, `web-coach`, `pwa-athlete`, `infra`, `ci`, `adr`, `spec`, `deps`, etc.
+Corresponds to the affected module or area: `coaching`, `intelligence`, `training-data`, `identity`, `api`, `web-coach`, `pwa-athlete`, `infra`, `ci`, `adr`, `spec`, `deps`, etc.
 
-### Ejemplos
+### Examples
 
 ```
-feat(coaching): agregar AdjustTrainingWeekCommand con validación de invariantes
+feat(coaching): add AdjustTrainingWeekCommand with invariant validation
 
-Implementa RF-PLAN-04 según spec en specs/coaching/002-adjust-training-week.md.
-Respeta invariantes de progresión de carga y recuperación entre intensidades.
-Emite TrainingPlanAdjustedIntegrationEvent.
+Implements RF-PLAN-04 according to spec in specs/coaching/002-adjust-training-week.md.
+Respects load progression and recovery invariants between intensities.
+Emits TrainingPlanAdjustedIntegrationEvent.
 
 Closes #42
 ```
 
 ```
-fix(training-data): corregir deduplicación de actividades entre Strava y Garmin
+fix(training-data): fix activity deduplication between Strava and Garmin
 ```
 
 ```
-docs(adr): agregar ADR-0005 sobre outbox pattern
+docs(adr): add ADR-0005 on outbox pattern
 ```
 
 ```
-chore(deps): actualizar MediatR a 12.2.0
+chore(deps): update MediatR to 12.2.0
 ```
 
 ## Branches
 
-Seguimos Gitflow adaptado:
+We follow adapted Gitflow:
 
-- `main` — producción. Solo acepta merges de `release/*` o `hotfix/*`.
-- `develop` — integración. Acepta merges de `feature/*` y `fix/*`.
-- `feature/<slug>` — features nuevas.
-- `fix/<slug>` — bugfixes no urgentes.
-- `hotfix/<slug>` — parches urgentes desde `main`.
-- `release/<version>` — estabilización pre-producción.
+- `main` — production. Only accepts merges from `release/*` or `hotfix/*`.
+- `develop` — integration. Accepts merges from `feature/*` and `fix/*`.
+- `feature/<slug>` — new features.
+- `fix/<slug>` — non-urgent bugfixes.
+- `hotfix/<slug>` — urgent patches from `main`.
+- `release/<version>` — pre-production stabilization.
 
-**Nunca commitear directo a `main` ni a `develop`.**
+**Never commit directly to `main` or `develop`.**
 
 ## Code review
 
-Todo PR necesita al menos una aprobación. Criterios:
+Every PR needs at least one approval. Criteria:
 
-- ¿Resuelve lo que dice resolver?
-- ¿Los tests cubren los casos importantes?
-- ¿Respeta la arquitectura (ver `docs/ARCHITECTURE.md` nivel 4)?
-- ¿Sigue las convenciones (este documento + `.editorconfig`)?
-- ¿No introduce deuda técnica sin justificación?
-- ¿Documentación actualizada si aplica?
+- Does it solve what it claims to solve?
+- Do the tests cover the important cases?
+- Does it respect the architecture (see `docs/ARCHITECTURE.md` level 4)?
+- Does it follow the conventions (this document + `.editorconfig`)?
+- Does it not introduce technical debt without justification?
+- Is documentation updated if applicable?
 
 ## Tests
 
-- **Unit tests:** obligatorios en Domain y Application. Cobertura objetivo 80%+.
-- **Integration tests:** para repositorios, handlers de eventos, integraciones externas.
-- **E2E tests:** para flujos críticos del usuario.
-- **Regla:** si se agrega código sin tests, hay que justificar por qué en el PR.
+- **Unit tests:** mandatory in Domain and Application. Target coverage 80%+.
+- **Integration tests:** for repositories, event handlers, external integrations.
+- **E2E tests:** for critical user flows.
+- **Rule:** if code is added without tests, justify why in the PR.
 
-## Setup del entorno de dev
+## Dev environment setup
 
-Ver `README.md` sección "Setup local".
+See `README.md` section "Local setup".
 
-## Preguntas
+## Questions
 
-Si algo no está claro:
+If something is unclear:
 
-1. Revisá la documentación (`docs/`, `CLAUDE.md`, `specs/`).
-2. Si no encontrás respuesta, abrí un issue con la etiqueta `question`.
+1. Review the documentation (`docs/`, `CLAUDE.md`, `specs/`).
+2. If you can't find an answer, open an issue with the `question` label.
 
-## Código de conducta
+## Code of conduct
 
-Este proyecto sigue un código de conducta básico: comunicación respetuosa, crítica constructiva, sin ataques personales. Discusiones técnicas con argumentos, no con opiniones. Disagreements se resuelven con datos o experimentos, no con autoridad.
+This project follows a basic code of conduct: respectful communication, constructive criticism, no personal attacks. Technical discussions with arguments, not opinions. Disagreements are resolved with data or experiments, not with authority.
 
 ---
 
-*Este documento evoluciona. Si encontrás fricción con algún proceso, proponé cambios via PR.*
+*This document evolves. If you find friction with any process, propose changes via PR.*

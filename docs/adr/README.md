@@ -1,146 +1,146 @@
 # Architecture Decision Records (ADRs)
 
-Este directorio contiene las decisiones arquitectónicas importantes del proyecto, cada una documentada con su contexto, alternativas consideradas, decisión tomada y consecuencias aceptadas.
+This directory contains the important architectural decisions of the project, each documented with its context, alternatives considered, decision made, and accepted consequences.
 
-## ¿Qué es un ADR?
+## What is an ADR?
 
-Un **Architecture Decision Record** es un documento corto (1-3 páginas) que captura una decisión técnica relevante en el momento en que se toma. Sirve para:
+An **Architecture Decision Record** is a short document (1-3 pages) that captures a relevant technical decision at the time it's made. It serves to:
 
-- Entender *por qué* el código es como es, meses o años después.
-- Evitar re-debatir decisiones ya tomadas ("¿por qué usamos PostgreSQL y no Mongo?").
-- Detectar cuándo una decisión ya no aplica porque el contexto cambió.
-- Onboarding rápido de nuevos colaboradores.
+- Understand *why* the code is the way it is, months or years later.
+- Avoid re-debating decisions already made ("why do we use PostgreSQL and not Mongo?").
+- Detect when a decision no longer applies because the context changed.
+- Fast onboarding of new collaborators.
 
-El valor de un ADR está en escribirlo **cuando la decisión se toma**, no retroactivamente.
+The value of an ADR is in writing it **when the decision is made**, not retroactively.
 
-## Cuándo escribir un ADR
+## When to write an ADR
 
-Escribir un ADR cuando la decisión:
+Write an ADR when the decision:
 
-- **Es difícil de revertir** (cambiar lenguaje, base de datos, patrón arquitectónico, proveedor crítico).
-- **Tiene consecuencias visibles en el código durante mucho tiempo** (patrones como CQRS, outbox, anticorruption layer).
-- **Involucra trade-offs significativos** donde otras personas podrían cuestionar la elección.
-- **Afecta a múltiples módulos o equipos**.
+- **Is hard to reverse** (changing language, database, architectural pattern, critical provider).
+- **Has consequences visible in the code for a long time** (patterns like CQRS, outbox, anticorruption layer).
+- **Involves significant trade-offs** where other people might question the choice.
+- **Affects multiple modules or teams**.
 
-**No escribir un ADR** para decisiones reversibles de bajo impacto, estilos de código (eso va en el linter), o features de producto (eso va en backlog).
+**Don't write an ADR** for low-impact reversible decisions, code style (that goes in the linter), or product features (that goes in the backlog).
 
-## Formato
+## Format
 
-Todos los ADRs siguen el template en `000-template.md`. Estructura:
+All ADRs follow the template in `000-template.md`. Structure:
 
-1. Metadata (fecha, estado, decididores).
-2. Contexto y problema.
-3. Fuerzas en tensión.
-4. Alternativas consideradas.
-5. Decisión.
-6. Consecuencias (positivas, negativas, neutrales).
-7. Cuándo reevaluar.
-8. Referencias.
+1. Metadata (date, status, deciders).
+2. Context and problem.
+3. Forces in tension.
+4. Alternatives considered.
+5. Decision.
+6. Consequences (positive, negative, neutral).
+7. When to revisit.
+8. References.
 
-## Estados posibles
+## Possible statuses
 
-- **Propuesto:** en discusión, todavía no implementado.
-- **Aceptado:** decidido e implementado (o en implementación).
-- **Deprecado:** ya no aplica pero se conserva por historia.
-- **Reemplazado por ADR-NNNN:** superado por una decisión posterior (link al nuevo).
+- **Proposed:** under discussion, not yet implemented.
+- **Accepted:** decided and implemented (or in implementation).
+- **Deprecated:** no longer applies but kept for history.
+- **Superseded by ADR-NNNN:** overridden by a later decision (link to the new one).
 
-## Convenciones de nombrado
+## Naming conventions
 
-`NNNN-titulo-kebab-case.md`
+`NNNN-short-descriptive-title-kebab-case.md`
 
-- `NNNN` = número secuencial con padding de ceros (0001, 0002, ..., 0123).
-- Título corto, descriptivo, en español, kebab-case.
-- Nunca reutilizar números, aunque un ADR sea deprecado.
+- `NNNN` = sequential number with zero-padding (0001, 0002, ..., 0123).
+- Short, descriptive title in English, kebab-case.
+- Never reuse numbers, even if an ADR is deprecated.
 
-Ejemplos: `0001-monolito-modular.md`, `0007-postgresql-como-db-principal.md`.
+Examples: `0001-modular-monolith.md`, `0007-postgresql-as-main-db.md`.
 
-## Índice de ADRs
+## ADR Index
 
-### Aceptados
+### Accepted
 
-| # | Título | Fecha | Estado |
-|---|--------|-------|--------|
-| [0001](./0001-monolito-modular.md) | Monolito modular sobre microservicios | 2026-04-22 | Aceptado |
+| # | Title | Date | Status |
+|---|-------|-------|--------|
+| [0001](./0001-monolito-modular.md) | Modular monolith over microservices | 2026-04-22 | Accepted |
+| [0002](./0002-sdd-sobre-ddd.md) | Spec-Driven Development on top of DDD | 2026-04-22 | Accepted |
 
-### Propuestos (en discusión)
+### Proposed (under discussion)
 
-_(ninguno todavía)_
+_(none yet)_
 
-### Deprecados
+### Deprecated
 
-_(ninguno todavía)_
+_(none yet)_
 
-## ADRs previstos a escribir
+## ADRs planned to write
 
-Lista de decisiones importantes que van a tomarse y documentarse a medida que el proyecto avance. **No escribir estos preventivamente**: escribirlos cuando la decisión se tome realmente, con contexto real.
+List of important decisions that will be made and documented as the project advances. **Don't write these preventively**: write them when the decision is actually made, with real context.
 
-### Fase de fundaciones técnicas
+### Technical foundations phase
 
-- **ADR-0002:** Clean Architecture con nomenclatura estándar + mapping a Mousqués.
-- **ADR-0003:** PostgreSQL + TimescaleDB como stack de datos principal.
-- **ADR-0004:** Multi-tenancy por fila con Row Level Security.
-- **ADR-0005:** Outbox pattern para eventos de integración.
-- **ADR-0006:** Strongly-typed IDs en el dominio.
-- **ADR-0007:** Autenticación: ASP.NET Core Identity vs. Clerk vs. Auth0 (a decidir).
-- **ADR-0008:** Estrategia de testing (MSTest + Testcontainers + cobertura por capa).
+- **ADR-0003:** PostgreSQL + TimescaleDB as main data stack.
+- **ADR-0004:** Row-based multi-tenancy with Row Level Security.
+- **ADR-0005:** Outbox pattern for integration events.
+- **ADR-0006:** Strongly-typed IDs in the domain.
+- **ADR-0007:** Authentication: ASP.NET Core Identity vs. Clerk vs. Auth0 (to decide).
+- **ADR-0008:** Testing strategy (MSTest + Testcontainers + coverage by layer).
 
-### Fase de ingesta y procesamiento
+### Ingestion and processing phase
 
-- **ADR-0009:** Anticorruption Layer por proveedor externo (Strava, Garmin, etc.).
-- **ADR-0010:** Manejo de tokens OAuth (cifrado a nivel aplicación + rotación).
-- **ADR-0011:** TimescaleDB vs. almacenamiento columnar para streams de actividad.
-- **ADR-0012:** Estrategia de reintentos y dead letter queue para sincronizaciones.
+- **ADR-0009:** Anticorruption Layer per external provider (Strava, Garmin, etc.).
+- **ADR-0010:** OAuth token handling (application-level encryption + rotation).
+- **ADR-0011:** TimescaleDB vs. columnar storage for activity streams.
+- **ADR-0012:** Retry strategy and dead letter queue for synchronizations.
 
-### Fase de inteligencia
+### Intelligence phase
 
-- **ADR-0013:** Abstracción `IInsightGenerator` para desacoplar del proveedor LLM.
-- **ADR-0014:** Structured outputs y validación de respuestas de LLM.
-- **ADR-0015:** Versionado de prompts como artefacto de código.
-- **ADR-0016:** Coach-in-the-loop como requisito no negociable.
-- **ADR-0017:** Caching de respuestas de LLM para control de costos.
+- **ADR-0013:** `IInsightGenerator` abstraction to decouple from LLM provider.
+- **ADR-0014:** Structured outputs and LLM response validation.
+- **ADR-0015:** Prompt versioning as a code artifact.
+- **ADR-0016:** Coach-in-the-loop as a non-negotiable requirement.
+- **ADR-0017:** LLM response caching for cost control.
 
-### Fase de producto
+### Product phase
 
-- **ADR-0018:** PWA sobre React Native para la app del atleta (MVP).
-- **ADR-0019:** Monorepo con pnpm + Turborepo para frontends.
-- **ADR-0020:** Generación de cliente API tipado desde OpenAPI.
-- **ADR-0021:** BFF pattern para separar concerns de web (coach) y mobile (atleta).
+- **ADR-0018:** PWA over React Native for the athlete app (MVP).
+- **ADR-0019:** Monorepo with pnpm + Turborepo for frontends.
+- **ADR-0020:** Typed API client generation from OpenAPI.
+- **ADR-0021:** BFF pattern to separate web (coach) and mobile (athlete) concerns.
 
-### Fase de infraestructura y operación
+### Infrastructure and operations phase
 
-- **ADR-0022:** Railway/Fly.io como PaaS inicial, migración a AWS/Azure como siguiente paso.
-- **ADR-0023:** GitHub Actions para CI/CD con gates manuales a producción.
-- **ADR-0024:** Gitflow como estrategia de branching.
-- **ADR-0025:** Conventional Commits en español.
-- **ADR-0026:** Stack de observabilidad (Serilog + OpenTelemetry + Sentry).
-- **ADR-0027:** Estrategia de backups y test de restore.
+- **ADR-0022:** Railway/Fly.io as initial PaaS, migration to AWS/Azure as next step.
+- **ADR-0023:** GitHub Actions for CI/CD with manual gates to production.
+- **ADR-0024:** Gitflow as branching strategy.
+- **ADR-0025:** Conventional Commits in English.
+- **ADR-0026:** Observability stack (Serilog + OpenTelemetry + Sentry).
+- **ADR-0027:** Backup strategy and restore testing.
 
-### Fase comercial
+### Commercial phase
 
-- **ADR-0028:** Stripe + MercadoPago como gateway de pagos.
-- **ADR-0029:** Modelo de pricing por tiers basados en atletas gestionados.
-- **ADR-0030:** Data retention policy y compliance con ley 18.331 / GDPR.
+- **ADR-0028:** Stripe + MercadoPago as payment gateway.
+- **ADR-0029:** Tier-based pricing model based on managed athletes.
+- **ADR-0030:** Data retention policy and compliance with law 18.331 / GDPR.
 
-Esta lista es orientativa y va a cambiar a medida que el proyecto evolucione. Algunos ADRs previstos pueden no llegar a escribirse porque la decisión se resuelve trivialmente; otros aparecerán porque surgieron problemas no anticipados.
+This list is indicative and will change as the project evolves. Some planned ADRs may never be written because the decision resolves trivially; others will appear because unexpected problems arose.
 
-## Proceso para escribir un ADR nuevo
+## Process for writing a new ADR
 
-1. Copiar `000-template.md` a `NNNN-titulo.md` con el siguiente número disponible.
-2. Completar secciones en orden: contexto → alternativas → decisión → consecuencias.
-3. Marcar estado inicial como `Propuesto` si necesita discusión, `Aceptado` si ya está decidido.
-4. Agregar al índice de este README.
-5. Commitear con mensaje `docs(adr): agregar ADR-NNNN sobre <tema>`.
-6. Si la decisión afecta a `CLAUDE.md` o `docs/ARCHITECTURE.md`, actualizar esos archivos en el mismo PR.
+1. Copy `000-template.md` to `NNNN-title.md` with the next available number.
+2. Fill in sections in order: context → alternatives → decision → consequences.
+3. Mark initial status as `Proposed` if it needs discussion, `Accepted` if already decided.
+4. Add to the index in this README.
+5. Commit with message `docs(adr): add ADR-NNNN on <topic>`.
+6. If the decision affects `CLAUDE.md` or `docs/ARCHITECTURE.md`, update those files in the same PR.
 
-## Cuándo deprecar un ADR
+## When to deprecate an ADR
 
-Si una decisión documentada ya no aplica:
+If a documented decision no longer applies:
 
-1. Cambiar estado a `Deprecado` o `Reemplazado por ADR-NNNN`.
-2. Agregar sección al final explicando por qué.
-3. Si fue reemplazado, linkear al nuevo ADR (bidireccionalmente).
-4. **No borrar el ADR viejo.** La historia importa.
+1. Change status to `Deprecated` or `Superseded by ADR-NNNN`.
+2. Add a section at the end explaining why.
+3. If superseded, link to the new ADR (bidirectionally).
+4. **Don't delete the old ADR.** History matters.
 
 ---
 
-*Los ADRs son contratos con el futuro. Tomalos en serio, pero no dejes que se vuelvan burocracia. El objetivo es claridad, no documentación defensiva.*
+*ADRs are contracts with the future. Take them seriously, but don't let them become bureaucracy. The goal is clarity, not defensive documentation.*

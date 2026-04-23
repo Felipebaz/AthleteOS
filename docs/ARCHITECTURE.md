@@ -1,337 +1,337 @@
 # Architecture Vision Document
 
-> **Proyecto:** Plataforma SaaS de coaching inteligente para deportes de endurance
-> **Nombre de trabajo (placeholder):** `AthleteOS` / `CoachLens` — a definir tras validación
-> **Autor:** Felipe
-> **Versión:** 0.1 — Draft inicial
-> **Última actualización:** 2026-04
-> **Audiencia:** el founder (yo mismo), futuros colaboradores técnicos, agentes de IA asistiendo el desarrollo (Claude Code)
+> **Project:** Intelligent coaching SaaS platform for endurance sports
+> **Working name (placeholder):** `AthleteOS` / `CoachLens` — to be defined after validation
+> **Author:** Felipe
+> **Version:** 0.1 — Initial draft
+> **Last updated:** 2026-04
+> **Audience:** the founder (myself), future technical collaborators, AI agents assisting development (Claude Code)
 
 ---
 
-## Cómo leer este documento
+## How to read this document
 
-Este documento va de lo más abstracto a lo más concreto, en 15 niveles. Cada nivel responde una pregunta distinta:
+This document goes from most abstract to most concrete, in 15 levels. Each level answers a different question:
 
-1. **Visión del producto** — ¿Qué problema resolvemos y para quién?
-2. **Requisitos funcionales** — ¿Qué hace el sistema?
-3. **Requisitos no funcionales** — ¿Cómo se comporta?
-4. **Principios arquitectónicos** — ¿Qué reglas guían cada decisión?
-5. **Bounded contexts** — ¿Cuáles son las partes del negocio?
-6. **Vista de despliegue lógica** — ¿Cómo se empaqueta y corre?
-7. **Vista de datos** — ¿Qué tipos de datos manejamos?
-8. **Vista de seguridad** — ¿Cómo protegemos todo?
-9. **Riesgos técnicos** — ¿Qué puede salir mal?
-10. **Módulos del backend** — ¿Cómo se estructura el código del servidor?
-11. **Modelo de dominio por contexto** — ¿Qué agregados, eventos y casos de uso hay?
-12. **Flujos end-to-end críticos** — ¿Qué pasa cuando un atleta sube una actividad?
-13. **Clean Architecture interna y tecnologías** — ¿Qué stack, qué patrones?
-14. **Infraestructura, CI/CD y ambientes** — ¿Cómo se despliega y opera?
-15. **Roadmap y fases de construcción** — ¿En qué orden se construye esto?
+1. **Product vision** — What problem do we solve and for whom?
+2. **Functional requirements** — What does the system do?
+3. **Non-functional requirements** — How does it behave?
+4. **Architectural principles** — What rules guide every decision?
+5. **Bounded contexts** — What are the parts of the business?
+6. **Logical deployment view** — How is it packaged and run?
+7. **Data view** — What types of data do we handle?
+8. **Security view** — How do we protect everything?
+9. **Technical risks** — What can go wrong?
+10. **Backend modules** — How is the server code structured?
+11. **Domain model per context** — What aggregates, events and use cases exist?
+12. **Critical end-to-end flows** — What happens when an athlete uploads an activity?
+13. **Internal Clean Architecture and technologies** — What stack, what patterns?
+14. **Infrastructure, CI/CD and environments** — How is it deployed and operated?
+15. **Roadmap and construction phases** — In what order is this built?
 
-Los primeros 9 niveles son **invariantes del producto**: no dependen del lenguaje ni del stack. Los niveles 10 en adelante bajan al detalle técnico.
+The first 9 levels are **product invariants**: they don't depend on the language or the stack. Levels 10 onwards drill down to technical detail.
 
 ---
 
-# Nivel 1 — Visión del producto
+# Level 1 — Product vision
 
-## 1.1 Problema
+## 1.1 Problem
 
-Los coaches de deportes de endurance (running, ciclismo, triatlón, natación de aguas abiertas) que entrenan atletas a distancia enfrentan tres problemas sistémicos:
+Endurance sports coaches (running, cycling, triathlon, open water swimming) who train athletes remotely face three systemic problems:
 
-1. **Sobrecarga de análisis manual.** Un coach con 15-25 atletas activos dedica entre 6 y 17 horas semanales solo a mirar datos de Garmin/Strava, comparar con lo planificado, detectar desviaciones y ajustar planes.
+1. **Manual analysis overload.** A coach with 15-25 active athletes spends between 6 and 17 hours per week just looking at Garmin/Strava data, comparing it with what was planned, detecting deviations, and adjusting plans.
 
-2. **Detección tardía de señales críticas.** Sobreentrenamiento, lesiones inminentes, enfermedad subclínica y estancamiento de rendimiento aparecen primero en los datos (HRV, calidad de sueño, variabilidad de FC, adherencia). El coach las ve con días o semanas de retraso porque revisa los datos de forma inconsistente.
+2. **Late detection of critical signals.** Overtraining, imminent injuries, subclinical illness, and performance plateaus first appear in the data (HRV, sleep quality, HR variability, adherence). The coach sees them days or weeks later because they review data inconsistently.
 
-3. **Herramientas fragmentadas y obsoletas.** TrainingPeaks es el estándar pero tiene UX de 2012 y cero inteligencia predictiva. Muchos coaches (especialmente hispanohablantes) terminan usando Excel + WhatsApp + Strava, con toda la fricción que eso implica.
+3. **Fragmented and outdated tools.** TrainingPeaks is the standard but has 2012 UX and zero predictive intelligence. Many coaches (especially Spanish-speaking ones) end up using Excel + WhatsApp + Strava, with all the friction that implies.
 
-## 1.2 Propuesta de valor
+## 1.2 Value proposition
 
-Un sistema que:
+A system that:
 
-1. **Ingiere automáticamente** los datos de entrenamiento y salud de todos los atletas de un coach desde sus wearables (Garmin, Strava, Polar, Suunto, COROS).
-2. **Los analiza continuamente** calculando carga, readiness, tendencias y detectando anomalías.
-3. **Presenta al coach un dashboard priorizado** con "estos 3 atletas necesitan tu atención esta semana y por qué", en vez de obligarlo a revisar 25 atletas uno por uno.
-4. **Sugiere ajustes concretos al plan** que el coach aprueba, modifica o rechaza con un click, nunca se aplican sin revisión humana.
-5. **Aprende del coach** con cada aceptación/rechazo, adaptándose a su estilo y filosofía.
+1. **Automatically ingests** training and health data for all of a coach's athletes from their wearables (Garmin, Strava, Polar, Suunto, COROS).
+2. **Continuously analyzes** calculating load, readiness, trends, and detecting anomalies.
+3. **Presents the coach with a prioritized dashboard** with "these 3 athletes need your attention this week and why", instead of forcing them to review 25 athletes one by one.
+4. **Suggests concrete plan adjustments** that the coach approves, modifies or rejects with a click, never applied without human review.
+5. **Learns from the coach** with each acceptance/rejection, adapting to their style and philosophy.
 
-La propuesta en una frase: **el coach recupera horas semanales y aumenta su capacidad de atender más atletas sin bajar la calidad del coaching.**
+The proposition in one sentence: **the coach recovers weekly hours and increases their capacity to serve more athletes without lowering coaching quality.**
 
 ## 1.3 Stakeholders
 
-| Stakeholder | Rol | Quién decide la compra | Valor recibido |
-|-------------|-----|------------------------|----------------|
-| **Coach independiente** | Usuario primario pagante | Sí | Tiempo recuperado, escalabilidad de su negocio, mejor retención de atletas |
-| **Atleta del coach** | Usuario consumidor | No (pero influye) | Plan más adaptativo, feedback más rápido, mejor experiencia |
-| **Club / Organización** | Comprador institucional (fase 2) | Sí | Monitoreo de plantel, prevención de lesiones a nivel equipo |
-| **Administrador** | Operador de la plataforma | N/A | Herramientas de soporte y monitoreo |
+| Stakeholder | Role | Who decides the purchase | Value received |
+|-------------|------|--------------------------|----------------|
+| **Independent coach** | Primary paying user | Yes | Time recovered, business scalability, better athlete retention |
+| **Coach's athlete** | Consumer user | No (but influences) | More adaptive plan, faster feedback, better experience |
+| **Club / Organization** | Institutional buyer (phase 2) | Yes | Squad monitoring, team-level injury prevention |
+| **Administrator** | Platform operator | N/A | Support and monitoring tools |
 
-## 1.4 Métricas norte del producto
+## 1.4 North star metrics
 
-Sin estas métricas clavadas, toda decisión de arquitectura es opinión:
+Without these metrics nailed down, every architecture decision is opinion:
 
-| Métrica | Objetivo MVP (6 meses) | Objetivo año 1 |
-|---------|------------------------|-----------------|
-| Horas/semana ahorradas por coach | 3+ | 6+ |
-| Tasa de aceptación de sugerencias de IA | 50%+ | 70%+ |
-| Coaches activos pagantes | 10-20 | 100+ |
-| Atletas por coach promedio | 10-15 | 18-25 |
-| Retención mensual de coaches | 85%+ | 92%+ |
-| NPS de coaches | 30+ | 50+ |
-| Incidentes de sobreentrenamiento/lesión detectados vs. baseline manual | +30% | +60% |
+| Metric | MVP goal (6 months) | Year 1 goal |
+|--------|---------------------|-------------|
+| Hours/week saved per coach | 3+ | 6+ |
+| AI suggestion acceptance rate | 50%+ | 70%+ |
+| Active paying coaches | 10-20 | 100+ |
+| Athletes per coach average | 10-15 | 18-25 |
+| Monthly coach retention | 85%+ | 92%+ |
+| Coach NPS | 30+ | 50+ |
+| Overtraining/injury incidents detected vs. manual baseline | +30% | +60% |
 
-## 1.5 Lo que NO es el producto (explícitamente)
+## 1.5 What the product is NOT (explicitly)
 
-Es tan importante definir esto como definir lo que sí es, para resistir scope creep:
+It's as important to define this as to define what it is, to resist scope creep:
 
-- **No es una app para el atleta final** (no competimos con Strava ni con Garmin Connect).
-- **No es una plataforma de clases o reservas** (no competimos con Trainerize ni MindBody).
-- **No es una red social deportiva** (no competimos con Strava como feed).
-- **No es un producto para coaches de gimnasio / fuerza pura** (en MVP; eso es expansión futura).
-- **No genera planes sin supervisión humana.** El coach siempre aprueba.
-- **No da consejos médicos ni diagnostica.** Detecta patrones, sugiere, deriva.
-
----
-
-# Nivel 2 — Requisitos funcionales
-
-Los requisitos se agrupan por **capacidades de negocio**, no por features de UI. Una capacidad es algo que el sistema permite, independiente de cómo se implemente.
-
-## 2.1 Capacidad: Gestión de identidades y accesos
-
-- RF-IAM-01: Coach se registra con email + password (u OAuth Google/Apple).
-- RF-IAM-02: Coach invita atletas por email con link único y expiración.
-- RF-IAM-03: Atleta acepta invitación creando cuenta o iniciando sesión.
-- RF-IAM-04: Coach puede gestionar roles dentro de su organización (futuro).
-- RF-IAM-05: Cada coach es un tenant aislado; un coach nunca ve atletas de otro.
-- RF-IAM-06: Admin del sistema puede impersonar usuarios para soporte (con auditoría).
-- RF-IAM-07: Recuperación de password con token de uso único.
-- RF-IAM-08: MFA opcional para coaches, obligatorio para admins.
-- RF-IAM-09: Atleta puede terminar su relación con un coach y migrar a otro coach conservando historial.
-
-## 2.2 Capacidad: Perfil deportivo del atleta
-
-- RF-ATH-01: Registrar datos biométricos básicos (edad, peso, género, altura).
-- RF-ATH-02: Registrar y actualizar zonas de entrenamiento (FC, ritmo, potencia) manualmente o por test.
-- RF-ATH-03: Registrar historial de lesiones con fechas y estado actual.
-- RF-ATH-04: Definir uno o más objetivos activos (evento, fecha, meta).
-- RF-ATH-05: Configurar disponibilidad semanal (días/horas entrenables).
-- RF-ATH-06: Mantener baselines actualizados (HRV, FC reposo, sueño promedio).
-- RF-ATH-07: Registrar equipamiento relevante (zapatillas km, bicicleta km — fase 2).
-
-## 2.3 Capacidad: Ingesta de datos externos
-
-- RF-ING-01: Atleta conecta Strava via OAuth 2.0.
-- RF-ING-02: Atleta conecta Garmin Connect via OAuth.
-- RF-ING-03: Ingesta automática de actividades nuevas sin intervención manual.
-- RF-ING-04: Ingesta de métricas diarias de salud (sueño, HRV, stress, pasos).
-- RF-ING-05: Normalización de datos heterogéneos a un modelo canónico interno.
-- RF-ING-06: Detección y descarte de duplicados entre proveedores.
-- RF-ING-07: Upload manual de archivos .fit/.gpx/.tcx como fallback.
-- RF-ING-08: Reprocesamiento histórico a demanda (última semana, último mes, todo).
-- RF-ING-09: Detección y notificación de desconexiones (token expirado, revocado).
-
-## 2.4 Capacidad: Planificación de entrenamiento
-
-- RF-PLAN-01: Coach crea plan para un atleta con rango de fechas y objetivo.
-- RF-PLAN-02: Plan se estructura en semanas; cada semana contiene sesiones diarias.
-- RF-PLAN-03: Cada sesión tiene tipo, duración objetivo, intensidad objetivo, descripción.
-- RF-PLAN-04: Coach edita plan; cada edición crea versión nueva (historial inmutable).
-- RF-PLAN-05: Coach guarda bloques reutilizables ("biblioteca" de sesiones/semanas/mesociclos).
-- RF-PLAN-06: IA genera borrador de plan a partir de objetivo + historial; coach aprueba/edita.
-- RF-PLAN-07: Plan respeta reglas fisiológicas duras (progresión de carga ≤10% semanal sin flag explícito).
-- RF-PLAN-08: Atleta ve solo su plan activo; no accede a versiones antiguas por defecto.
-
-## 2.5 Capacidad: Seguimiento de ejecución
-
-- RF-EXEC-01: Matcheo automático de actividad ingestada con sesión planificada por fecha + tipo.
-- RF-EXEC-02: Matcheo manual cuando el automático falla (coach o atleta).
-- RF-EXEC-03: Cálculo de desviación (volumen, intensidad, cumplimiento) planificado vs. ejecutado.
-- RF-EXEC-04: Atleta reporta wellness subjetivo diario (RPE, sueño, ánimo, dolor muscular).
-- RF-EXEC-05: Atleta agrega notas de texto a sesiones ejecutadas.
-- RF-EXEC-06: Cálculo diario de métricas derivadas (TSS, CTL, ATL, TSB o equivalentes).
-- RF-EXEC-07: Marcado de sesiones: completada, parcial, saltada, reemplazada.
-
-## 2.6 Capacidad: Análisis inteligente
-
-- RF-AI-01: Cálculo nocturno de "readiness score" por atleta (0-100).
-- RF-AI-02: Detección de anomalías en HRV, FC reposo, sueño, carga.
-- RF-AI-03: Identificación de estancamiento (sin mejora en métrica clave durante N semanas).
-- RF-AI-04: Generación de sugerencias priorizadas para el coach, con razonamiento textual + datos.
-- RF-AI-05: Categorías de sugerencia: ajuste de sesión, ajuste de bloque, derivación profesional, sin acción.
-- RF-AI-06: Registro de feedback del coach (aceptada, modificada, rechazada + razón opcional).
-- RF-AI-07: Aprendizaje incremental del estilo del coach a partir de su feedback.
-- RF-AI-08: Confidence score en cada sugerencia (baja confianza → se muestra pero con disclaimer).
-- RF-AI-09: Explicabilidad obligatoria: toda sugerencia muestra qué datos la soportan.
-
-## 2.7 Capacidad: Comunicación coach-atleta
-
-- RF-COM-01: Mensajería asincrónica en hilo por atleta.
-- RF-COM-02: Mensajes pueden referenciar sesiones o métricas específicas.
-- RF-COM-03: Notificaciones push (web push + email como fallback).
-- RF-COM-04: Preferencias de notificación por canal y tipo.
-- RF-COM-05: Coach responde preguntas con contexto (IA sugiere respuesta; coach aprueba/edita).
-
-## 2.8 Capacidad: Facturación y suscripciones (fase 2)
-
-- RF-BILL-01: Planes segmentados por cantidad de atletas gestionados.
-- RF-BILL-02: Suscripciones mensuales y anuales con descuento anual.
-- RF-BILL-03: Pagos recurrentes via Stripe (+ MercadoPago para LatAm).
-- RF-BILL-04: Self-service de upgrade, downgrade, cancelación.
-- RF-BILL-05: Generación de factura fiscal (Uruguay, Argentina, España como países prioritarios).
-- RF-BILL-06: Grace period de 7 días ante falla de cobro.
-- RF-BILL-07: Reactivación de cuenta tras pago recuperado conserva todo el historial.
-
-## 2.9 Capacidad: Reportes y exportaciones
-
-- RF-REP-01: Reporte semanal automático para atleta (resumen + insights).
-- RF-REP-02: Reporte mensual para coach (KPIs de su operación).
-- RF-REP-03: Exportación completa de datos del atleta (portabilidad legal).
-- RF-REP-04: Exportación del plan en formato estándar (PDF + JSON).
-
-## 2.10 Capacidad: Administración de plataforma
-
-- RF-ADM-01: Panel de admin interno con métricas de plataforma.
-- RF-ADM-02: Logs de auditoría accesibles para admins.
-- RF-ADM-03: Gestión de feature flags.
-- RF-ADM-04: Herramientas de soporte (ver estado de un tenant, resetear sincronizaciones).
+- **Not an app for the end athlete** (we don't compete with Strava or Garmin Connect).
+- **Not a classes or booking platform** (we don't compete with Trainerize or MindBody).
+- **Not a sports social network** (we don't compete with Strava as a feed).
+- **Not a product for gym / pure strength coaches** (in MVP; that's future expansion).
+- **Doesn't generate plans without human supervision.** The coach always approves.
+- **Doesn't give medical advice or diagnose.** Detects patterns, suggests, refers.
 
 ---
 
-# Nivel 3 — Requisitos no funcionales
+# Level 2 — Functional requirements
 
-Esta es la sección que separa proyectos juniors de proyectos serios. Los NFR deben ser **medibles y verificables**, no vaguedades.
+Requirements are grouped by **business capabilities**, not UI features. A capability is something the system allows, independent of how it's implemented.
 
-## 3.1 Disponibilidad
+## 2.1 Capability: Identity and access management
 
-| Aspecto | Meta MVP | Meta producto maduro |
-|---------|----------|----------------------|
-| Uptime mensual | 99.0% (7h downtime/mes) | 99.9% (43min/mes) |
-| RTO (Recovery Time Objective) | 4 horas | 30 minutos |
-| RPO (Recovery Point Objective) | 24 horas | 1 hora |
-| Mantenimiento planificado | Anunciado 72h antes | Idem + ventana de baja demanda |
+- RF-IAM-01: Coach registers with email + password (or OAuth Google/Apple).
+- RF-IAM-02: Coach invites athletes by email with a unique, expiring link.
+- RF-IAM-03: Athlete accepts invitation by creating an account or signing in.
+- RF-IAM-04: Coach can manage roles within their organization (future).
+- RF-IAM-05: Each coach is an isolated tenant; one coach never sees another's athletes.
+- RF-IAM-06: System admin can impersonate users for support (with auditing).
+- RF-IAM-07: Password recovery with single-use token.
+- RF-IAM-08: Optional MFA for coaches, mandatory for admins.
+- RF-IAM-09: Athlete can end their relationship with a coach and migrate to another coach preserving history.
 
-**Ventana crítica:** 05:00-10:00 UTC-3 (mañana hispana) es cuando coaches revisan datos nocturnos; ningún mantenimiento ahí.
+## 2.2 Capability: Athlete sports profile
+
+- RF-ATH-01: Register basic biometric data (age, weight, gender, height).
+- RF-ATH-02: Register and update training zones (HR, pace, power) manually or by test.
+- RF-ATH-03: Register injury history with dates and current status.
+- RF-ATH-04: Define one or more active goals (event, date, target).
+- RF-ATH-05: Configure weekly availability (trainable days/hours).
+- RF-ATH-06: Keep updated baselines (HRV, resting HR, average sleep).
+- RF-ATH-07: Register relevant equipment (shoe km, bike km — phase 2).
+
+## 2.3 Capability: External data ingestion
+
+- RF-ING-01: Athlete connects Strava via OAuth 2.0.
+- RF-ING-02: Athlete connects Garmin Connect via OAuth.
+- RF-ING-03: Automatic ingestion of new activities without manual intervention.
+- RF-ING-04: Ingestion of daily health metrics (sleep, HRV, stress, steps).
+- RF-ING-05: Normalization of heterogeneous data to an internal canonical model.
+- RF-ING-06: Detection and discarding of duplicates across providers.
+- RF-ING-07: Manual upload of .fit/.gpx/.tcx files as fallback.
+- RF-ING-08: Historical reprocessing on demand (last week, last month, all).
+- RF-ING-09: Detection and notification of disconnections (expired or revoked token).
+
+## 2.4 Capability: Training planning
+
+- RF-PLAN-01: Coach creates a plan for an athlete with a date range and goal.
+- RF-PLAN-02: Plan is structured in weeks; each week contains daily sessions.
+- RF-PLAN-03: Each session has type, target duration, target intensity, description.
+- RF-PLAN-04: Coach edits plan; each edit creates a new version (immutable history).
+- RF-PLAN-05: Coach saves reusable blocks ("library" of sessions/weeks/mesocycles).
+- RF-PLAN-06: AI generates plan draft from goal + history; coach approves/edits.
+- RF-PLAN-07: Plan respects hard physiological rules (load progression ≤10% weekly without explicit flag).
+- RF-PLAN-08: Athlete only sees their active plan; doesn't access old versions by default.
+
+## 2.5 Capability: Execution tracking
+
+- RF-EXEC-01: Automatic matching of ingested activity with planned session by date + type.
+- RF-EXEC-02: Manual matching when automatic fails (coach or athlete).
+- RF-EXEC-03: Deviation calculation (volume, intensity, compliance) planned vs. executed.
+- RF-EXEC-04: Athlete reports daily subjective wellness (RPE, sleep, mood, muscle soreness).
+- RF-EXEC-05: Athlete adds text notes to executed sessions.
+- RF-EXEC-06: Daily calculation of derived metrics (TSS, CTL, ATL, TSB or equivalents).
+- RF-EXEC-07: Session marking: completed, partial, skipped, replaced.
+
+## 2.6 Capability: Intelligent analysis
+
+- RF-AI-01: Nightly calculation of "readiness score" per athlete (0-100).
+- RF-AI-02: Detection of anomalies in HRV, resting HR, sleep, load.
+- RF-AI-03: Identification of plateaus (no improvement in key metric for N weeks).
+- RF-AI-04: Generation of prioritized suggestions for the coach, with textual reasoning + data.
+- RF-AI-05: Suggestion categories: session adjustment, block adjustment, professional referral, no action.
+- RF-AI-06: Coach feedback recording (accepted, modified, rejected + optional reason).
+- RF-AI-07: Incremental learning of coach style from their feedback.
+- RF-AI-08: Confidence score on each suggestion (low confidence → shown but with disclaimer).
+- RF-AI-09: Mandatory explainability: every suggestion shows what data supports it.
+
+## 2.7 Capability: Coach-athlete communication
+
+- RF-COM-01: Asynchronous messaging in thread per athlete.
+- RF-COM-02: Messages can reference specific sessions or metrics.
+- RF-COM-03: Push notifications (web push + email as fallback).
+- RF-COM-04: Notification preferences by channel and type.
+- RF-COM-05: Coach answers questions with context (AI suggests response; coach approves/edits).
+
+## 2.8 Capability: Billing and subscriptions (phase 2)
+
+- RF-BILL-01: Plans segmented by number of managed athletes.
+- RF-BILL-02: Monthly and annual subscriptions with annual discount.
+- RF-BILL-03: Recurring payments via Stripe (+ MercadoPago for LatAm).
+- RF-BILL-04: Self-service upgrade, downgrade, cancellation.
+- RF-BILL-05: Tax invoice generation (Uruguay, Argentina, Spain as priority countries).
+- RF-BILL-06: 7-day grace period on billing failure.
+- RF-BILL-07: Account reactivation after recovered payment preserves all history.
+
+## 2.9 Capability: Reports and exports
+
+- RF-REP-01: Automatic weekly report for athlete (summary + insights).
+- RF-REP-02: Monthly report for coach (KPIs of their operation).
+- RF-REP-03: Complete athlete data export (legal portability).
+- RF-REP-04: Plan export in standard format (PDF + JSON).
+
+## 2.10 Capability: Platform administration
+
+- RF-ADM-01: Internal admin panel with platform metrics.
+- RF-ADM-02: Audit logs accessible to admins.
+- RF-ADM-03: Feature flag management.
+- RF-ADM-04: Support tools (view a tenant's state, reset synchronizations).
+
+---
+
+# Level 3 — Non-functional requirements
+
+This is the section that separates junior projects from serious projects. NFRs must be **measurable and verifiable**, not vague statements.
+
+## 3.1 Availability
+
+| Aspect | MVP goal | Mature product goal |
+|--------|----------|---------------------|
+| Monthly uptime | 99.0% (7h downtime/month) | 99.9% (43min/month) |
+| RTO (Recovery Time Objective) | 4 hours | 30 minutes |
+| RPO (Recovery Point Objective) | 24 hours | 1 hour |
+| Planned maintenance | Announced 72h in advance | Same + low-demand window |
+
+**Critical window:** 05:00-10:00 UTC-3 (Hispanic morning) is when coaches review nightly data; no maintenance there.
 
 ## 3.2 Performance
 
-| Operación | p50 | p95 | p99 | Timeout |
+| Operation | p50 | p95 | p99 | Timeout |
 |-----------|-----|-----|-----|---------|
 | Login | 200ms | 500ms | 1s | 5s |
-| Dashboard coach (vista principal) | 500ms | 1.5s | 3s | 10s |
-| Vista detalle de atleta | 400ms | 1s | 2s | 8s |
-| Guardar ajuste de plan | 150ms | 400ms | 800ms | 5s |
-| Sincronización de actividad (background) | N/A | 5min desde registro | 15min | 1h |
-| Generación de sugerencia IA | 3s | 10s | 20s | 60s (async con feedback) |
-| Cálculo de readiness nocturno | N/A | 30s/atleta | 2min | 10min |
+| Coach dashboard (main view) | 500ms | 1.5s | 3s | 10s |
+| Athlete detail view | 400ms | 1s | 2s | 8s |
+| Save plan adjustment | 150ms | 400ms | 800ms | 5s |
+| Activity sync (background) | N/A | 5min from registration | 15min | 1h |
+| AI suggestion generation | 3s | 10s | 20s | 60s (async with feedback) |
+| Nightly readiness calculation | N/A | 30s/athlete | 2min | 10min |
 
-## 3.3 Escalabilidad
+## 3.3 Scalability
 
-| Métrica | MVP (mes 6) | Año 1 | Año 3 aspiracional |
-|---------|-------------|-------|---------------------|
-| Coaches activos | 20 | 500 | 5.000 |
-| Atletas activos | 300 | 10.000 | 100.000 |
-| Actividades ingestadas/mes | 10.000 | 300.000 | 3.000.000 |
-| Requests/segundo pico | 5 | 100 | 1.000 |
-| Datos de time-series (GB) | 5 | 150 | 1.500 |
-| Costo mensual de infraestructura | <100 USD | <2.000 USD | <20.000 USD |
+| Metric | MVP (month 6) | Year 1 | Aspirational year 3 |
+|--------|---------------|--------|---------------------|
+| Active coaches | 20 | 500 | 5,000 |
+| Active athletes | 300 | 10,000 | 100,000 |
+| Activities ingested/month | 10,000 | 300,000 | 3,000,000 |
+| Peak requests/second | 5 | 100 | 1,000 |
+| Time-series data (GB) | 5 | 150 | 1,500 |
+| Monthly infrastructure cost | <100 USD | <2,000 USD | <20,000 USD |
 
-**Principio:** la arquitectura no tiene que *soportar* 5000 coaches hoy, tiene que *poder llegar ahí* sin reescritura profunda.
+**Principle:** the architecture doesn't have to *support* 5000 coaches today, it has to *be able to get there* without a deep rewrite.
 
-## 3.4 Seguridad
+## 3.4 Security
 
-- Cifrado en tránsito: TLS 1.3 mínimo; HSTS habilitado.
-- Cifrado en reposo: AES-256 en DB y object storage.
-- Cifrado a nivel aplicación para campos extra-sensibles (tokens OAuth, datos médicos).
-- Secretos en vault gestionado (nunca en .env commiteados, nunca en código).
-- Rotación automática de secretos críticos cada 90 días.
-- MFA opcional coaches, obligatorio admins.
-- Rate limiting: 100 req/min por usuario autenticado; 10 req/min por IP no autenticada.
-- Protección OWASP Top 10 verificada (inyección, XSS, CSRF, SSRF, etc.).
-- Dependency scanning en CI (Snyk, Dependabot, o equivalente).
-- Secret scanning en CI (gitleaks o similar).
-- Pentesting antes de GA comercial.
+- Encryption in transit: TLS 1.3 minimum; HSTS enabled.
+- Encryption at rest: AES-256 in DB and object storage.
+- Application-level encryption for extra-sensitive fields (OAuth tokens, medical data).
+- Secrets in managed vault (never in committed .env files, never in code).
+- Automatic rotation of critical secrets every 90 days.
+- Optional MFA for coaches, mandatory for admins.
+- Rate limiting: 100 req/min per authenticated user; 10 req/min per unauthenticated IP.
+- OWASP Top 10 protection verified (injection, XSS, CSRF, SSRF, etc.).
+- Dependency scanning in CI (Snyk, Dependabot, or equivalent).
+- Secret scanning in CI (gitleaks or similar).
+- Pentesting before commercial GA.
 
-## 3.5 Privacidad y cumplimiento
+## 3.5 Privacy and compliance
 
-- **Marcos regulatorios aplicables:**
-  - Ley 18.331 (Uruguay) — Protección de datos personales.
-  - GDPR — si atendemos usuarios europeos (aplicable extraterritorialmente).
-  - LGPD (Brasil) — si expandimos allá.
-  - Ley 19.628 (Chile), Habeas Data (Argentina).
-- **Datos de salud** se tratan como categoría especial (GDPR Art. 9, LGPD Art. 11). Consentimiento explícito requerido.
-- Consentimientos versionados y auditables.
-- Política de retención explícita:
-  - Actividades y datos del atleta: mientras el usuario exista + 30 días post-borrado.
-  - Logs de sistema: 30-90 días.
-  - Logs de auditoría: 5 años.
-  - Backups: rotación de 90 días.
-- Derecho al olvido: borrado efectivo (hard delete después de ventana de seguridad).
-- Portabilidad: export completo en JSON + CSV en menos de 30 días.
-- DPA firmado con todos los proveedores (Anthropic, hosting, email, etc.).
+- **Applicable regulatory frameworks:**
+  - Law 18.331 (Uruguay) — Personal data protection.
+  - GDPR — if we serve European users (applies extraterritorially).
+  - LGPD (Brazil) — if we expand there.
+  - Law 19.628 (Chile), Habeas Data (Argentina).
+- **Health data** treated as special category (GDPR Art. 9, LGPD Art. 11). Explicit consent required.
+- Versioned and auditable consents.
+- Explicit retention policy:
+  - Athlete activities and data: while user exists + 30 days post-deletion.
+  - System logs: 30-90 days.
+  - Audit logs: 5 years.
+  - Backups: 90-day rotation.
+- Right to be forgotten: effective deletion (hard delete after security window).
+- Portability: complete JSON + CSV export in less than 30 days.
+- DPA signed with all providers (Anthropic, hosting, email, etc.).
 
-## 3.6 Observabilidad
+## 3.6 Observability
 
-- Logs estructurados (JSON) centralizados, retención 30 días mínimo.
-- Trazabilidad distribuida con correlation ID por request.
-- Métricas de negocio (no solo técnicas): sugerencias/día, tasa aceptación, actividades sincronizadas, MAU de coaches.
-- Métricas técnicas estándar: latencia, throughput, error rate, saturación (RED + USE).
-- Alertas proactivas para error rate > 1%, latencia p95 degradada, colas creciendo sin drenarse.
-- Dashboards separados por audiencia: técnico (on-call) y producto (founder).
-- Error tracking con contexto (Sentry o equivalente).
+- Structured logs (JSON) centralized, 30-day minimum retention.
+- Distributed traceability with correlation ID per request.
+- Business metrics (not just technical): suggestions/day, acceptance rate, synchronized activities, coach MAU.
+- Standard technical metrics: latency, throughput, error rate, saturation (RED + USE).
+- Proactive alerts for error rate > 1%, degraded p95 latency, queues growing without draining.
+- Separate dashboards by audience: technical (on-call) and product (founder).
+- Error tracking with context (Sentry or equivalent).
 
-## 3.7 Mantenibilidad
+## 3.7 Maintainability
 
-- Cobertura de tests: 90%+ en Domain, 70%+ en Application, 60%+ global.
-- Setup de dev local en <30 min para un dev nuevo.
-- Documentación arquitectónica viva (este documento + ADRs).
-- Linter + formatter obligatorios en CI.
-- Deploy sin downtime (rolling / blue-green).
-- Rollback automatizado en <5 min ante degradación.
-- Migraciones de DB siempre reversibles (excepción documentada).
+- Test coverage: 90%+ in Domain, 70%+ in Application, 60%+ global.
+- Local dev setup in <30 min for a new dev.
+- Living architectural documentation (this document + ADRs).
+- Linter + formatter mandatory in CI.
+- Zero-downtime deploy (rolling / blue-green).
+- Automated rollback in <5 min on degradation.
+- DB migrations always reversible (documented exceptions).
 
-## 3.8 Usabilidad
+## 3.8 Usability
 
-- Accesibilidad WCAG 2.1 AA como objetivo mínimo.
-- Responsive en dashboard del coach (tablet usable, mobile en modo lectura).
-- PWA del atleta: mobile-first, instalable, offline para plan de hoy.
-- Internacionalización preparada (i18n); lanzamiento solo en español.
-- Tiempo de primera interacción útil en móvil 4G: <3 segundos.
-- Dark mode soportado.
+- Accessibility WCAG 2.1 AA as minimum target.
+- Responsive in coach dashboard (tablet usable, mobile in read mode).
+- Athlete PWA: mobile-first, installable, offline for today's plan.
+- Internationalization prepared (i18n); launched in English only initially.
+- First meaningful interaction on 4G mobile: <3 seconds.
+- Dark mode supported.
 
-## 3.9 Portabilidad y vendor lock-in
+## 3.9 Portability and vendor lock-in
 
-- Dominio de negocio no depende de ningún cloud específico.
-- Core de dominio no depende de LLM específico (abstracción `IInsightGenerator`).
-- Migración entre clouds factible en <1 mes ante incidente grave de proveedor.
-- Datos siempre recuperables: backups portables (no formato propietario).
+- Business domain doesn't depend on any specific cloud.
+- Domain core doesn't depend on a specific LLM (`IInsightGenerator` abstraction).
+- Migration between clouds feasible in <1 month on serious provider incident.
+- Data always recoverable: portable backups (no proprietary format).
 
-## 3.10 Costos operativos
+## 3.10 Operational costs
 
-| Componente | Meta por coach/mes | Justificación |
-|------------|---------------------|----------------|
-| Infra (compute + DB + storage) | <0.50 USD | Margen sano contra suscripción 20-40 USD |
-| LLM (inferencias) | <0.30 USD | Caching + modelos adecuados a la tarea |
-| Email + push | <0.05 USD | Volumen bajo |
-| **Total infra/coach/mes** | **<1 USD** | Gross margin >90% |
+| Component | Goal per coach/month | Justification |
+|-----------|---------------------|----------------|
+| Infra (compute + DB + storage) | <0.50 USD | Healthy margin against 20-40 USD subscription |
+| LLM (inferences) | <0.30 USD | Caching + right model for each task |
+| Email + push | <0.05 USD | Low volume |
+| **Total infra/coach/month** | **<1 USD** | Gross margin >90% |
 
 ---
 
-# Nivel 4 — Principios arquitectónicos
+# Level 4 — Architectural principles
 
-Las reglas que guían toda decisión técnica. Cuando hay duda, se va a estos principios.
+The rules that guide every technical decision. When in doubt, go to these principles.
 
-## P1. Domain-Driven Design como norte
+## P1. Domain-Driven Design as north star
 
-El código refleja el negocio. Los nombres del código son los nombres que usa el coach. Los módulos se corresponden con contextos de negocio, no con capas técnicas. Si no lo entiende un coach al ver un diagrama de contextos, algo está mal.
+The code reflects the business. Code names are the names the coach uses. Modules correspond to business contexts, not technical layers. If a coach can't understand it when looking at a context diagram, something's wrong.
 
-**Consecuencia práctica:** no existen clases `UserManager`, `DataProcessor`, `Helper`. Existen `TrainingPlan`, `Athlete`, `ReadinessSnapshot`, `CoachSuggestion`.
+**Practical consequence:** there are no classes `UserManager`, `DataProcessor`, `Helper`. There are `TrainingPlan`, `Athlete`, `ReadinessSnapshot`, `CoachSuggestion`.
 
-## P2. Clean Architecture estricta
+## P2. Strict Clean Architecture
 
-Dependencias apuntan **hacia adentro**, al dominio. El dominio no sabe de infraestructura ni de la web. La infraestructura implementa puertos (interfaces) definidos por el dominio o la aplicación.
+Dependencies point **inward**, toward the domain. The domain doesn't know about infrastructure or the web. Infrastructure implements ports (interfaces) defined by the domain or the application.
 
-**Regla de dependencias:**
+**Dependency rule:**
 ```
 Api ──► Application ──► Domain
  │            │
@@ -339,175 +339,175 @@ Api ──► Application ──► Domain
                    └──► Domain
 ```
 
-Domain no depende de nadie. Application depende solo de Domain. Infrastructure depende de Application y Domain. Api depende de todos (compone).
+Domain depends on no one. Application depends only on Domain. Infrastructure depends on Application and Domain. Api depends on all (composes).
 
-## P3. Event-driven entre contextos, transaccional dentro
+## P3. Event-driven between contexts, transactional within
 
-- **Dentro de un bounded context:** operaciones transaccionales con garantías ACID.
-- **Entre bounded contexts:** eventos asincrónicos con consistencia eventual.
-- **Nunca transacciones distribuidas.**
+- **Within a bounded context:** transactional operations with ACID guarantees.
+- **Between bounded contexts:** asynchronous events with eventual consistency.
+- **Never distributed transactions.**
 
-## P4. Consistency boundaries explícitos
+## P4. Explicit consistency boundaries
 
-Lo que debe ser consistente inmediatamente vive en el mismo agregado. Lo que puede ser eventualmente consistente vive en contextos separados. Un caso de uso modifica **un único agregado**.
+What must be immediately consistent lives in the same aggregate. What can be eventually consistent lives in separate contexts. A use case modifies **one single aggregate**.
 
-## P5. Asíncrono por defecto para operaciones lentas
+## P5. Async by default for slow operations
 
-Ingesta, análisis, generación de IA, notificaciones: todo por colas. El usuario recibe respuesta inmediata ("procesando..."), no espera.
+Ingestion, analysis, AI generation, notifications: all via queues. The user gets an immediate response ("processing..."), doesn't wait.
 
-## P6. Seguridad y privacidad como requisitos, no features
+## P6. Security and privacy as requirements, not features
 
-Todo diseño pasa por el filtro: ¿qué datos sensibles toca? ¿cómo se protegen? ¿quién accede? ¿cómo se audita? No se agrega después.
+Every design passes through the filter: what sensitive data does it touch? how is it protected? who accesses it? how is it audited? Not added later.
 
-## P7. Observabilidad como requisito
+## P7. Observability as requirement
 
-Un módulo no está "terminado" si no expone métricas, logs estructurados y traces. Es parte del Definition of Done.
+A module is not "done" if it doesn't expose metrics, structured logs, and traces. It's part of the Definition of Done.
 
-## P8. Diseñado para un dev hoy, extensible a equipo de 10 mañana
+## P8. Designed for one dev today, extensible to a team of 10 tomorrow
 
-Monolito modular por ahora. Fronteras tan claras que partir a microservicios sea mecánico, no rediseño.
+Modular monolith for now. Boundaries so clear that splitting into microservices is mechanical, not a redesign.
 
-## P9. Vendor-agnostic en el core, pragmático en la periferia
+## P9. Vendor-agnostic in the core, pragmatic in the periphery
 
-El dominio no depende de Anthropic ni de AWS. Los adaptadores sí pueden serlo. Cambiar de LLM o de proveedor de email no toca el dominio.
+The domain doesn't depend on Anthropic or AWS. Adapters can be. Changing LLM or email provider doesn't touch the domain.
 
-## P10. Automatización por encima de disciplina
+## P10. Automation over discipline
 
-Lo que puede verificarse con un test, CI check o linter, se automatiza. No dependas de que el dev se acuerde.
+What can be verified with a test, CI check, or linter, is automated. Don't depend on the dev remembering.
 
-## P11. Tests como documentación ejecutable
+## P11. Tests as executable documentation
 
-Los tests de dominio describen las reglas de negocio mejor que cualquier comentario. Se leen como especificación.
+Domain tests describe business rules better than any comment. They read as specifications.
 
 ## P12. Fail loud, fail early
 
-Mejor un error explícito en deploy que un comportamiento raro en producción. Validaciones estrictas en los bordes, invariantes duras en el dominio.
+Better an explicit error at deploy than weird behavior in production. Strict validations at the boundaries, hard invariants in the domain.
 
-## P13. Datos son el activo más valioso
+## P13. Data is the most valuable asset
 
-Ante duda, conservar datos. Backups, audit trail, soft delete cuando aplique, event sourcing parcial para decisiones críticas.
+When in doubt, preserve data. Backups, audit trail, soft delete when applicable, partial event sourcing for critical decisions.
 
-## P14. Evolvability > scalability prematura
+## P14. Evolvability > premature scalability
 
-No optimizar para 1M de usuarios cuando tenés 10. Pero sí dejar puertas abiertas para cuando llegue ahí.
+Don't optimize for 1M users when you have 10. But do leave doors open for when you get there.
 
-## P15. El mejor código es el que no existe
+## P15. The best code is code that doesn't exist
 
-Antes de construir algo, preguntarse si existe una solución gestionada que lo resuelva. Auth, pagos, emails, observabilidad: raramente vale la pena construir desde cero.
+Before building something, ask if there's a managed solution that solves it. Auth, payments, emails, observability: rarely worth building from scratch.
 
 ---
 
-# Nivel 5 — Bounded contexts
+# Level 5 — Bounded contexts
 
-## 5.1 Tipos de contextos (Core / Supporting / Generic)
+## 5.1 Context types (Core / Supporting / Generic)
 
-Siguiendo DDD, clasificamos cada contexto según cuánto valor competitivo genera:
+Following DDD, we classify each context by how much competitive value it generates:
 
-| Contexto | Tipo | Construir o comprar |
-|----------|------|---------------------|
-| Coaching | **Core** | Construir, es el corazón |
-| Intelligence | **Core** | Construir, es la ventaja |
-| Athlete Profile | Supporting | Construir simple |
-| Training Data Ingestion | Supporting | Construir, con énfasis en el anticorruption layer |
-| Communication | Supporting | Construir simple, tercerizar delivery |
-| Identity & Access | Generic | Considerar comprar (Clerk, Auth0) o construir standard |
-| Billing | Generic | Comprar (Stripe) |
-| Notification Delivery | Generic | Comprar (Expo Push, SendGrid) |
+| Context | Type | Build or buy |
+|---------|------|-------------|
+| Coaching | **Core** | Build, it's the heart |
+| Intelligence | **Core** | Build, it's the advantage |
+| Athlete Profile | Supporting | Build simple |
+| Training Data Ingestion | Supporting | Build, with emphasis on anticorruption layer |
+| Communication | Supporting | Build simple, outsource delivery |
+| Identity & Access | Generic | Consider buying (Clerk, Auth0) or building standard |
+| Billing | Generic | Buy (Stripe) |
+| Notification Delivery | Generic | Buy (Expo Push, SendGrid) |
 
-## 5.2 Descripción de cada contexto
+## 5.2 Description of each context
 
 ### 5.2.1 Identity & Access Context
 
-**Responsabilidad:** autenticación, autorización, gestión de usuarios, tenancy, invitaciones.
+**Responsibility:** authentication, authorization, user management, tenancy, invitations.
 
-**Lenguaje ubicuo:** Usuario, Coach, Atleta, Tenant, Rol, Permiso, Sesión, Invitación, Token de refresh.
+**Ubiquitous language:** User, Coach, Athlete, Tenant, Role, Permission, Session, Invitation, Refresh token.
 
-**Límites:**
-- **Sí hace:** signup, login, logout, gestión de tokens, gestión de roles, invitaciones, recuperación de password, MFA.
-- **No hace:** perfil deportivo (eso es Athlete Profile), preferencias de notificación (Communication), relación coach-atleta como concepto de negocio (Coaching).
+**Boundaries:**
+- **Does:** signup, login, logout, token management, role management, invitations, password recovery, MFA.
+- **Doesn't:** sports profile (that's Athlete Profile), notification preferences (Communication), coach-athlete relationship as a business concept (Coaching).
 
-**Upstream de:** todos los demás contextos.
+**Upstream of:** all other contexts.
 
 ---
 
 ### 5.2.2 Athlete Profile Context
 
-**Responsabilidad:** perfil deportivo del atleta. Distinto del usuario. Un atleta puede existir como perfil antes de que tenga cuenta activa.
+**Responsibility:** athlete's sports profile. Distinct from the user. An athlete can exist as a profile before they have an active account.
 
-**Lenguaje ubicuo:** Atleta, Zona de entrenamiento, Objetivo, Lesión, Disponibilidad, Test fisiológico, Baseline.
+**Ubiquitous language:** Athlete, Training zone, Goal, Injury, Availability, Physiological test, Baseline.
 
-**Límites:**
-- **Sí hace:** CRUD de perfil deportivo, gestión de zonas, registro de lesiones, cálculo de baselines a partir de datos históricos.
-- **No hace:** autenticar al atleta (Identity), almacenar actividades (Training Data), planificar entrenamiento (Coaching).
+**Boundaries:**
+- **Does:** sports profile CRUD, zone management, injury registration, baseline calculation from historical data.
+- **Doesn't:** authenticate the athlete (Identity), store activities (Training Data), plan training (Coaching).
 
-**Colabora con:** Coaching (provee info para planificar), Intelligence (provee contexto para análisis).
+**Collaborates with:** Coaching (provides info for planning), Intelligence (provides context for analysis).
 
 ---
 
 ### 5.2.3 Training Data Context
 
-**Responsabilidad:** ingesta, normalización y almacenamiento de datos de wearables y fuentes externas. Es la frontera con el mundo exterior.
+**Responsibility:** ingestion, normalization, and storage of wearable and external source data. It's the boundary with the outside world.
 
-**Lenguaje ubicuo:** Actividad, Stream de datos, Métrica de salud, Proveedor, Sincronización, Token externo, Webhook.
+**Ubiquitous language:** Activity, Data stream, Health metric, Provider, Synchronization, External token, Webhook.
 
-**Límites:**
-- **Sí hace:** conectar proveedores externos, ingerir actividades, normalizar a modelo canónico, detectar duplicados, almacenar streams de time-series, ofrecer consultas a otros contextos.
-- **No hace:** interpretar los datos (Intelligence), relacionarlos con plan (Coaching), mostrarlos al usuario (API + frontend).
+**Boundaries:**
+- **Does:** connect external providers, ingest activities, normalize to canonical model, detect duplicates, store time-series streams, offer queries to other contexts.
+- **Doesn't:** interpret the data (Intelligence), relate it to the plan (Coaching), show it to the user (API + frontend).
 
-**Patrón arquitectónico clave:** **Anticorruption Layer** con un adaptador por cada proveedor externo. Traduce datos heterogéneos al modelo canónico interno (`CanonicalActivity`).
+**Key architectural pattern:** **Anticorruption Layer** with one adapter per external provider. Translates heterogeneous data to the internal canonical model (`CanonicalActivity`).
 
 ---
 
 ### 5.2.4 Coaching Context
 
-**Responsabilidad:** corazón del producto. Planes de entrenamiento, su evolución, ejecución, y la relación coach-atleta.
+**Responsibility:** heart of the product. Training plans, their evolution, execution, and the coach-athlete relationship.
 
-**Lenguaje ubicuo:** Plan, Periodización, Mesociclo, Semana de entrenamiento, Sesión planificada, Sesión ejecutada, Desviación, Ajuste, Sugerencia aplicada, Template, Biblioteca del coach.
+**Ubiquitous language:** Plan, Periodization, Mesocycle, Training week, Planned session, Executed session, Deviation, Adjustment, Applied suggestion, Template, Coach library.
 
-**Límites:**
-- **Sí hace:** crear/editar planes, versionar cambios, matchear ejecución con planificación, calcular cumplimiento, gestionar feedback del coach sobre sugerencias.
-- **No hace:** almacenar datos crudos de actividades (Training Data), correr análisis predictivo (Intelligence), comunicar con el atleta (Communication).
+**Boundaries:**
+- **Does:** create/edit plans, version changes, match execution with planning, calculate compliance, manage coach feedback on suggestions.
+- **Doesn't:** store raw activity data (Training Data), run predictive analysis (Intelligence), communicate with the athlete (Communication).
 
-**Agregados principales:** `TrainingPlan`, `SessionExecution`, `CoachLibrary`.
+**Main aggregates:** `TrainingPlan`, `SessionExecution`, `CoachLibrary`.
 
 ---
 
 ### 5.2.5 Intelligence Context
 
-**Responsabilidad:** análisis, predicciones, sugerencias, aprendizaje del estilo del coach. Donde vive la IA.
+**Responsibility:** analysis, predictions, suggestions, learning the coach's style. Where AI lives.
 
-**Lenguaje ubicuo:** Readiness, Tendencia, Anomalía, Predicción, Confianza del modelo, Sugerencia, Razonamiento, Feedback loop del coach.
+**Ubiquitous language:** Readiness, Trend, Anomaly, Prediction, Model confidence, Suggestion, Reasoning, Coach feedback loop.
 
-**Límites:**
-- **Sí hace:** calcular readiness diario, detectar anomalías, generar sugerencias contextualizadas, aprender del feedback, ofrecer insights para dashboards.
-- **No hace:** modificar planes (solo sugiere, Coaching aplica), tomar decisiones autónomas (siempre coach-in-the-loop), almacenar datos crudos.
+**Boundaries:**
+- **Does:** calculate daily readiness, detect anomalies, generate contextualized suggestions, learn from feedback, offer insights for dashboards.
+- **Doesn't:** modify plans (only suggests, Coaching applies), make autonomous decisions (always coach-in-the-loop), store raw data.
 
-**Agregados principales:** `AthleteReadinessSnapshot`, `CoachSuggestion`, `CoachStyleProfile`.
+**Main aggregates:** `AthleteReadinessSnapshot`, `CoachSuggestion`, `CoachStyleProfile`.
 
 ---
 
 ### 5.2.6 Communication Context
 
-**Responsabilidad:** mensajería entre coach y atleta, notificaciones cross-channel, preferencias.
+**Responsibility:** coach-athlete messaging, cross-channel notifications, preferences.
 
-**Lenguaje ubicuo:** Hilo, Mensaje, Notificación, Canal (push, email, in-app), Preferencia, Entrega.
+**Ubiquitous language:** Thread, Message, Notification, Channel (push, email, in-app), Preference, Delivery.
 
-**Límites:**
-- **Sí hace:** gestionar hilos coach-atleta, orquestar envío a canales, gestionar preferencias, registrar entregas.
-- **No hace:** entregar físicamente (Notification Delivery tercerizado), decidir qué eventos generan notificaciones (lo decide cada contexto emisor).
+**Boundaries:**
+- **Does:** manage coach-athlete threads, orchestrate delivery to channels, manage preferences, record deliveries.
+- **Doesn't:** physically deliver (Notification Delivery outsourced), decide which events generate notifications (each emitting context decides).
 
 ---
 
-### 5.2.7 Billing Context (fase 2)
+### 5.2.7 Billing Context (phase 2)
 
-**Responsabilidad:** suscripciones, pagos, facturación.
+**Responsibility:** subscriptions, payments, billing.
 
-**Lenguaje ubicuo:** Suscripción, Plan de precio, Período, Cobro, Factura, Cupón, Método de pago.
+**Ubiquitous language:** Subscription, Price plan, Period, Charge, Invoice, Coupon, Payment method.
 
-**Límites:**
-- Motor real es Stripe/MercadoPago. Billing Context es el sistema de registro interno que refleja y expone el estado de facturación al resto del negocio.
+**Boundaries:**
+- The real engine is Stripe/MercadoPago. Billing Context is the internal record system that reflects and exposes the billing state to the rest of the business.
 
-## 5.3 Mapa de contextos (Context Map)
+## 5.3 Context Map
 
 ```
                     ┌────────────────────┐
@@ -526,7 +526,7 @@ Siguiendo DDD, clasificamos cada contexto según cuánto valor competitivo gener
 └──────┬──────┘       └──────┬──────┘        └──────┬──────┘
        │                     │                      │
        │                     │ Published Language    │
-       │                     │ (eventos canónicos)   │
+       │                     │ (canonical events)    │
        │                     ▼                      │
        │              ┌─────────────┐               │
        └─────────────►│Intelligence │◄──────────────┘
@@ -541,7 +541,7 @@ Siguiendo DDD, clasificamos cada contexto según cuánto valor competitivo gener
                       └─────────────┘
 
               ┌────────────────────────────┐
-              │  Proveedores Externos      │
+              │  External Providers        │
               │  (Garmin, Strava, Polar)   │
               └─────────────┬──────────────┘
                             │
@@ -549,37 +549,37 @@ Siguiendo DDD, clasificamos cada contexto según cuánto valor competitivo gener
                             ▼
                     [Training Data]
 
-Leyenda:
+Legend:
 U/S = Upstream/Downstream (Customer-Supplier)
 OHS = Open Host Service
 ACL = Anticorruption Layer
 ```
 
-**Patrones aplicados:**
-- **Customer-Supplier (U/S)** entre Identity y el resto: Identity dicta, los demás consumen.
-- **Published Language** entre Training Data e Intelligence/Coaching: eventos canónicos estables como `ActivityIngested`.
-- **Partnership** entre Coaching e Intelligence: evolucionan juntos, colaboración fuerte.
-- **Open Host Service** con Communication: cualquiera le puede hablar por API estable.
-- **Anticorruption Layer** contra proveedores externos: protección del dominio.
-- **Conformist** con Stripe (en fase 2): aceptamos su modelo, no luchamos.
+**Applied patterns:**
+- **Customer-Supplier (U/S)** between Identity and the rest: Identity dictates, others consume.
+- **Published Language** between Training Data and Intelligence/Coaching: stable canonical events like `ActivityIngested`.
+- **Partnership** between Coaching and Intelligence: they evolve together, strong collaboration.
+- **Open Host Service** with Communication: anyone can talk to it via a stable API.
+- **Anticorruption Layer** against external providers: domain protection.
+- **Conformist** with Stripe (in phase 2): we accept their model, don't fight it.
 
 ---
 
-# Nivel 6 — Vista de despliegue lógica
+# Level 6 — Logical deployment view
 
-## 6.1 Componentes de runtime
+## 6.1 Runtime components
 
 ```
 ┌───────────────────────────────────────────────────────────────────┐
 │                           EDGE / GATEWAY                           │
-│  TLS • WAF • Rate limiting • CDN para assets • Reverse proxy      │
+│  TLS • WAF • Rate limiting • CDN for assets • Reverse proxy       │
 └──────────────────────────────┬────────────────────────────────────┘
                                │
          ┌─────────────────────┼─────────────────────┐
          │                     │                     │
          ▼                     ▼                     ▼
 ┌──────────────────┐   ┌──────────────────┐  ┌──────────────────┐
-│  Dashboard Coach │   │   PWA Atleta     │  │  Admin Panel     │
+│  Coach Dashboard │   │   Athlete PWA    │  │  Admin Panel     │
 │  (React + Vite)  │   │  (React + Vite,  │  │   (React)        │
 │   desktop-first  │   │    PWA install)  │  │                  │
 └──────────────────┘   └──────────────────┘  └──────────────────┘
@@ -588,25 +588,25 @@ ACL = Anticorruption Layer
                                │ HTTPS + JWT
                                ▼
 ┌───────────────────────────────────────────────────────────────────┐
-│                  API PRINCIPAL (.NET 8 stateless)                  │
+│                  MAIN API (.NET 8 stateless)                        │
 │                                                                     │
 │  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐     │
 │  │  BFF Web   │ │ BFF Mobile │ │ Core API   │ │ Admin API  │     │
-│  │  (Coach)   │ │  (Atleta)  │ │            │ │            │     │
+│  │  (Coach)   │ │  (Athlete) │ │            │ │            │     │
 │  └────────────┘ └────────────┘ └────────────┘ └────────────┘     │
 │                                                                     │
 │  ┌─────────────────────────────────────────────────────────────┐  │
-│  │             MÓDULOS DEL DOMINIO (bounded contexts)            │  │
+│  │             DOMAIN MODULES (bounded contexts)                 │  │
 │  │                                                               │  │
 │  │  Identity • AthleteProfile • TrainingData • Coaching •        │  │
-│  │  Intelligence • Communication • Billing(fase 2)               │  │
+│  │  Intelligence • Communication • Billing(phase 2)              │  │
 │  └─────────────────────────────────────────────────────────────┘  │
 └───────────────────────────────────────────────────────────────────┘
                                │
                                ▼
 ┌───────────────────────────────────────────────────────────────────┐
-│                    BUS DE EVENTOS / COLAS                          │
-│              (Redis Streams MVP → RabbitMQ a escala)               │
+│                    EVENT BUS / QUEUES                               │
+│              (Redis Streams MVP → RabbitMQ at scale)               │
 └───────────────────────────────────────────────────────────────────┘
                                │
          ┌─────────────┬───────┼───────┬─────────────┐
@@ -622,203 +622,203 @@ ACL = Anticorruption Layer
                                │
                                ▼
 ┌───────────────────────────────────────────────────────────────────┐
-│                         ALMACENAMIENTO                             │
+│                         STORAGE                                     │
 │                                                                     │
 │  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌────────────┐  │
 │  │ PostgreSQL │  │TimescaleDB │  │   Redis    │  │   Object   │  │
 │  │(OLTP core) │  │(time-series│  │  (cache)   │  │  Storage   │  │
-│  │            │  │ de actividad│  │            │  │ (FIT, etc) │  │
+│  │            │  │ activities)│  │            │  │ (FIT, etc) │  │
 │  └────────────┘  └────────────┘  └────────────┘  └────────────┘  │
 └───────────────────────────────────────────────────────────────────┘
 
 ┌───────────────────────────────────────────────────────────────────┐
-│                     SERVICIOS EXTERNOS                             │
+│                     EXTERNAL SERVICES                               │
 │                                                                     │
 │  Anthropic (Claude) • Garmin Connect API • Strava API • Polar     │
 │  SendGrid/Resend (email) • Sentry (errors) • OTel backend (obs)   │
-│  Stripe (fase 2) • Expo Push (si app nativa, fase 2)              │
+│  Stripe (phase 2) • Expo Push (if native app, phase 2)            │
 └───────────────────────────────────────────────────────────────────┘
 ```
 
-## 6.2 Topologías por fase
+## 6.2 Topologies by phase
 
-| Fase | Compute | Data | Observación |
-|------|---------|------|-------------|
-| **MVP** | 1 API + 2 workers, PaaS (Railway/Fly) | PostgreSQL gestionado + Redis | Single region |
-| **Tracción inicial (año 1)** | API auto-escalada + pool workers | DB con réplica lectura + Redis cluster | Single region, CDN global |
-| **Escala (año 3+)** | Multi-servicio / microservicios extraídos | DB sharded por tenant + read replicas | Multi-region si latencia lo exige |
+| Phase | Compute | Data | Observation |
+|-------|---------|------|-------------|
+| **MVP** | 1 API + 2 workers, PaaS (Railway/Fly) | Managed PostgreSQL + Redis | Single region |
+| **Early traction (year 1)** | Auto-scaled API + worker pool | DB with read replica + Redis cluster | Single region, global CDN |
+| **Scale (year 3+)** | Multi-service / extracted microservices | DB sharded by tenant + read replicas | Multi-region if latency demands it |
 
-## 6.3 Principios de deploy
+## 6.3 Deploy principles
 
-- **Stateless API:** cualquier instancia puede servir cualquier request. Todo estado va a DB o cache.
-- **Workers idempotentes:** un mismo mensaje puede procesarse 2 veces sin consecuencias.
-- **12-factor app:** config por env vars, logs a stdout, dependencias explícitas.
-- **Inmutable deployments:** una imagen Docker por versión, promovida entre ambientes.
+- **Stateless API:** any instance can serve any request. All state goes to DB or cache.
+- **Idempotent workers:** the same message can be processed twice without consequences.
+- **12-factor app:** config via env vars, logs to stdout, explicit dependencies.
+- **Immutable deployments:** one Docker image per version, promoted between environments.
 
 ---
 
-# Nivel 7 — Vista de datos
+# Level 7 — Data view
 
-## 7.1 Categorías de datos
+## 7.1 Data categories
 
-| Categoría | Volumen | Patrón de acceso | Tecnología |
-|-----------|---------|------------------|------------|
-| Transaccional de negocio | Medio | Lectura/escritura balanceada | PostgreSQL |
-| Series temporales de actividad | Alto | Escritura batch, lectura agregada | TimescaleDB (ext de PostgreSQL) |
-| Datos derivados / analíticos | Medio | Lectura pesada, escritura nocturna | PostgreSQL + materialized views + cache Redis |
-| Embeddings / vectorial | Bajo-medio | Búsqueda semántica | pgvector (ext PostgreSQL) |
-| Archivos binarios | Alto (bytes) | Escritura rara, lectura rara | Object storage (S3, R2) |
-| Logs y auditoría | Alto | Append-only, búsqueda ocasional | PostgreSQL partitioned + archivado |
+| Category | Volume | Access pattern | Technology |
+|----------|--------|----------------|------------|
+| Transactional business | Medium | Balanced read/write | PostgreSQL |
+| Activity time series | High | Batch write, aggregated read | TimescaleDB (PostgreSQL extension) |
+| Derived / analytical data | Medium | Heavy read, nightly write | PostgreSQL + materialized views + Redis cache |
+| Embeddings / vector | Low-medium | Semantic search | pgvector (PostgreSQL extension) |
+| Binary files | High (bytes) | Rare write, rare read | Object storage (S3, R2) |
+| Logs and audit | High | Append-only, occasional search | PostgreSQL partitioned + archiving |
 
-## 7.2 Decisión de multi-tenancy
+## 7.2 Multi-tenancy decision
 
-**Modelo elegido:** **Shared database, shared schema con `tenant_id` en cada tabla.**
+**Chosen model:** **Shared database, shared schema with `tenant_id` on every table.**
 
-**Razones:**
-- Simplicidad operativa (una DB, un set de migraciones).
-- Costo bajo (no una DB por tenant).
-- Facilita analytics cross-tenant (con cuidado).
+**Reasons:**
+- Operational simplicity (one DB, one set of migrations).
+- Low cost (not one DB per tenant).
+- Facilitates cross-tenant analytics (with care).
 
-**Contras aceptados:**
-- Riesgo de leak de datos entre tenants si se olvida un filtro (mitigado con RLS o filtros automáticos en repo).
-- Ruido en queries si un tenant tiene mucho volumen.
+**Accepted cons:**
+- Risk of data leak between tenants if a filter is forgotten (mitigated with RLS or automatic filters in repo).
+- Query noise if one tenant has high volume.
 
-**Implementación:**
-- Cada tabla de negocio tiene columna `tenant_id` NOT NULL.
-- Row Level Security (RLS) de PostgreSQL habilitado por defecto.
-- Session variable `app.current_tenant` seteada en cada request.
-- Repositorios en código filtran automáticamente por tenant actual.
+**Implementation:**
+- Each business table has `tenant_id` NOT NULL column.
+- PostgreSQL Row Level Security (RLS) enabled by default.
+- Session variable `app.current_tenant` set on each request.
+- Repositories in code automatically filter by current tenant.
 
-**Cuándo reevaluar:** si un cliente enterprise exige aislamiento físico → schema-per-tenant o DB-per-tenant.
+**When to revisit:** if an enterprise client requires physical isolation → schema-per-tenant or DB-per-tenant.
 
-## 7.3 Políticas de datos
+## 7.3 Data policies
 
-| Tipo | Retención | Backup | Archivado |
+| Type | Retention | Backup | Archiving |
 |------|-----------|--------|-----------|
-| Actividades del atleta | Vida del usuario + 30d post-borrado | Diario, 90d retenidos | Fríos a >2 años |
-| Streams detallados | Idem | Idem | Compresión + fríos a >1 año |
-| Mensajes coach-atleta | Vida del usuario + 30d | Diario | Sin archivado |
-| Logs de sistema | 30-90 días | No backup (ephemeral) | N/A |
-| Logs de auditoría | 5 años | Mensual | Glacial >1 año |
-| Backups | Rotación 90 días | Off-site semanal | N/A |
+| Athlete activities | User lifetime + 30d post-deletion | Daily, 90d retained | Cold at >2 years |
+| Detailed streams | Same | Same | Compression + cold at >1 year |
+| Coach-athlete messages | User lifetime + 30d | Daily | No archiving |
+| System logs | 30-90 days | No backup (ephemeral) | N/A |
+| Audit logs | 5 years | Monthly | Glacial >1 year |
+| Backups | 90-day rotation | Off-site weekly | N/A |
 
-## 7.4 Principios de modelado de datos
+## 7.4 Data modeling principles
 
-1. **UUID v7 como identificadores** (no auto-incrementales ni v4 puro): tiempo-ordenables, sin revelación de volumen, insertables concurrentemente.
-2. **Strongly-typed IDs en código**, nunca `Guid` genéricos: `AthleteId`, `TrainingPlanId`.
-3. **Timestamps en UTC siempre**. Conversión a zona horaria solo en la UI.
-4. **Soft delete con flag `deleted_at`** donde aplica legal o de negocio; hard delete donde se requiere (GDPR/DPA).
-5. **Audit fields obligatorios:** `created_at`, `updated_at`, `created_by`, `updated_by`.
-6. **Outbox table en cada schema de contexto** para eventos salientes.
-7. **Migrations siempre reversibles** salvo excepciones documentadas.
-
----
-
-# Nivel 8 — Vista de seguridad
-
-## 8.1 Modelo de amenazas (STRIDE resumido)
-
-| Amenaza | Vector principal | Mitigación |
-|---------|------------------|------------|
-| **S**poofing (suplantación) | Robo de tokens, phishing | JWT corto + refresh rotativo, MFA, HSTS |
-| **T**ampering (manipulación) | MITM, inyección | TLS 1.3, prepared statements, validación estricta |
-| **R**epudiation (negación) | Operación sin trazabilidad | Audit log de acciones sensibles con user+timestamp+IP |
-| **I**nformation disclosure | SQL injection, leak cross-tenant | ORM parametrizado, RLS, principio menor privilegio |
-| **D**enial of service | Flood de requests, queries pesadas | Rate limiting, timeouts, circuit breakers, cola bounded |
-| **E**levation of privilege | Bug en autorización | Policy-based authz, tests de authz en CI |
-
-## 8.2 Defensa en capas
-
-### Capa 1 — Perímetro
-- TLS 1.3 everywhere, HSTS, HPKP opcional.
-- WAF gestionado (CloudFlare/Vercel/proveedor).
-- Rate limiting por IP y por user.
-- Protección DDoS del proveedor cloud.
-
-### Capa 2 — Autenticación
-- Password hashing con Argon2id (preferido) o bcrypt cost 12+.
-- JWT de acceso con TTL corto (15 min).
-- Refresh token rotativo con detección de reuso.
-- MFA opcional via TOTP o passkeys.
-- Bloqueo tras N intentos fallidos con backoff.
-
-### Capa 3 — Autorización
-- Policy-based: cada endpoint declara requirements (`CanManageAthlete`, `CanViewPlan`).
-- Multi-tenant enforcement por RLS en DB + filtro en código (double check).
-- Principio de menor privilegio en roles de DB.
-
-### Capa 4 — Protección de datos
-- Cifrado en reposo (AES-256) en DB y object storage.
-- Cifrado a nivel aplicación para tokens OAuth y campos médicos sensibles.
-- Vault para secretos (AWS Secrets Manager, Doppler, o similar).
-- Rotación de secretos automática cada 90d para secretos de integración.
-
-### Capa 5 — Auditoría
-- Log de accesos a datos sensibles (lectura de info de atleta por coach).
-- Log de operaciones admin.
-- Tamper-evident: append-only, hash chain opcional.
-- Retención 5 años.
-
-### Capa 6 — Respuesta a incidentes
-- Runbook documentado.
-- Responsables definidos (on-call rotation cuando haya equipo).
-- Plan de comunicación a usuarios afectados (72h para notificación bajo GDPR).
-- Post-mortems sin culpa.
-
-## 8.3 OAuth con proveedores externos (específico)
-
-- Tokens de Garmin/Strava **cifrados a nivel aplicación** antes de persistir.
-- Scopes mínimos necesarios.
-- Detección de revocación y re-pedido de autorización.
-- Nunca logs con tokens.
-- Renovación automática de refresh tokens.
+1. **UUID v7 as identifiers** (not auto-incremental or pure v4): time-orderable, without volume revelation, concurrently insertable.
+2. **Strongly-typed IDs in code**, never generic `Guid`: `AthleteId`, `TrainingPlanId`.
+3. **Timestamps always in UTC**. Timezone conversion only in the UI.
+4. **Soft delete with `deleted_at` flag** where legally or business-required; hard delete where required (GDPR/DPA).
+5. **Mandatory audit fields:** `created_at`, `updated_at`, `created_by`, `updated_by`.
+6. **Outbox table in each context schema** for outgoing events.
+7. **Migrations always reversible** except documented exceptions.
 
 ---
 
-# Nivel 9 — Riesgos técnicos
+# Level 8 — Security view
 
-## 9.1 Matriz de riesgos
+## 8.1 Threat model (STRIDE summary)
 
-| # | Riesgo | Probabilidad | Impacto | Exposición | Mitigación |
-|---|--------|--------------|---------|------------|------------|
-| R1 | Garmin/Strava cambia API y rompe ingesta | Media | Alto | **Alta** | ACL, múltiples proveedores, upload manual como fallback |
-| R2 | Costos de LLM escalan desproporcionadamente | Alta | Medio | **Alta** | Caching, structured outputs, modelo por tarea, monitoreo costos/tenant |
-| R3 | LLM alucina una sugerencia peligrosa | Media | Alto | **Alta** | Coach-in-the-loop siempre, validación estructurada, reglas duras del dominio |
-| R4 | Modelado fisiológico incorrecto (TSS, CTL, etc.) | Media | Alto | **Alta** | Consultar 2-3 coaches expertos, validar con literatura, tests con datos reales |
-| R5 | Leak de datos de salud | Baja | Catastrófico | **Alta** | Security by design, pentesting, cifrado doble, menor dato posible |
-| R6 | Vendor lock-in con LLM específico | Media | Medio | Media | Abstracción `IInsightGenerator`, evaluación periódica de alternativas |
-| R7 | Complejidad supera la capacidad del equipo (1 dev) | Alta | Alto | **Alta** | Servicios gestionados, foco en core, recortar features sin piedad |
-| R8 | Sobreingeniería prematura | Alta | Medio | **Alta** | Monolito modular, no microservicios hasta dolor real |
-| R9 | Baja adopción por coaches (producto no validado) | Media | Catastrófico | **Alta** | Validación con 10+ coaches antes de código, beta paga temprana |
-| R10 | Churn por falta de valor sostenido | Media | Alto | Alta | Métricas de engagement desde día 1, check-ins con clientes |
-| R11 | Problemas legales por datos de salud | Baja | Catastrófico | Media | Asesor legal local, DPAs, términos claros, consentimientos granulares |
-| R12 | Fallo catastrófico de DB sin backup usable | Baja | Catastrófico | Media | Backups diarios probados mensualmente (test de restore real) |
+| Threat | Main vector | Mitigation |
+|--------|-------------|------------|
+| **S**poofing (impersonation) | Token theft, phishing | Short JWT + rotating refresh, MFA, HSTS |
+| **T**ampering (manipulation) | MITM, injection | TLS 1.3, prepared statements, strict validation |
+| **R**epudiation (denial) | Operation without traceability | Audit log of sensitive actions with user+timestamp+IP |
+| **I**nformation disclosure | SQL injection, cross-tenant leak | Parameterized ORM, RLS, least privilege principle |
+| **D**enial of service | Request flood, heavy queries | Rate limiting, timeouts, circuit breakers, bounded queue |
+| **E**levation of privilege | Authorization bug | Policy-based authz, authz tests in CI |
 
-**Regla:** los riesgos marcados con exposición **Alta** deben tener un item concreto en el backlog cada sprint.
+## 8.2 Defense in layers
 
-## 9.2 Riesgos no técnicos a tener presente
+### Layer 1 — Perimeter
+- TLS 1.3 everywhere, HSTS, optional HPKP.
+- Managed WAF (CloudFlare/Vercel/cloud provider).
+- Rate limiting per IP and per user.
+- Cloud provider DDoS protection.
 
-- **Focus drift:** agregar features para un segundo segmento (nutricionistas, gym) antes de dominar el primero.
-- **Burnout del founder:** sin ingresos 6+ meses construyendo solo es duro; tener deadlines claros y descansos.
-- **Falta de feedback real:** construir en vacío sin coaches reales probando.
+### Layer 2 — Authentication
+- Password hashing with Argon2id (preferred) or bcrypt cost 12+.
+- Access JWT with short TTL (15 min).
+- Rotating refresh token with reuse detection.
+- Optional MFA via TOTP or passkeys.
+- Lockout after N failed attempts with backoff.
+
+### Layer 3 — Authorization
+- Policy-based: each endpoint declares requirements (`CanManageAthlete`, `CanViewPlan`).
+- Multi-tenant enforcement by RLS in DB + code filter (double check).
+- Least privilege principle on DB roles.
+
+### Layer 4 — Data protection
+- Encryption at rest (AES-256) in DB and object storage.
+- Application-level encryption for OAuth tokens and sensitive medical fields.
+- Vault for secrets (AWS Secrets Manager, Doppler, or similar).
+- Automatic secret rotation every 90d for integration secrets.
+
+### Layer 5 — Auditing
+- Log of accesses to sensitive data (coach reading athlete info).
+- Admin operation log.
+- Tamper-evident: append-only, optional hash chain.
+- 5-year retention.
+
+### Layer 6 — Incident response
+- Documented runbook.
+- Defined on-call responsibilities (rotation when team exists).
+- User communication plan (72h for GDPR notification).
+- Blameless post-mortems.
+
+## 8.3 OAuth with external providers (specific)
+
+- Garmin/Strava tokens **encrypted at application level** before persisting.
+- Minimum required scopes.
+- Revocation detection and re-authorization request.
+- Never log tokens.
+- Automatic refresh token renewal.
 
 ---
 
-# Nivel 10 — Módulos del backend
+# Level 9 — Technical risks
 
-Ahora aterrizamos los bounded contexts a estructura real de código .NET.
+## 9.1 Risk matrix
 
-## 10.1 Organización de la solución
+| # | Risk | Probability | Impact | Exposure | Mitigation |
+|---|------|-------------|--------|----------|------------|
+| R1 | Garmin/Strava changes API and breaks ingestion | Medium | High | **High** | ACL, multiple providers, manual upload as fallback |
+| R2 | LLM costs scale disproportionately | High | Medium | **High** | Caching, structured outputs, model per task, cost monitoring/tenant |
+| R3 | LLM hallucinates a dangerous suggestion | Medium | High | **High** | Coach-in-the-loop always, structured validation, hard domain rules |
+| R4 | Incorrect physiological modeling (TSS, CTL, etc.) | Medium | High | **High** | Consult 2-3 expert coaches, validate with literature, test with real data |
+| R5 | Health data leak | Low | Catastrophic | **High** | Security by design, pentesting, double encryption, minimum data |
+| R6 | Vendor lock-in with specific LLM | Medium | Medium | Medium | `IInsightGenerator` abstraction, periodic alternative evaluation |
+| R7 | Complexity exceeds team capacity (1 dev) | High | High | **High** | Managed services, core focus, ruthless feature cutting |
+| R8 | Premature over-engineering | High | Medium | **High** | Modular monolith, no microservices until real pain |
+| R9 | Low adoption by coaches (unvalidated product) | Medium | Catastrophic | **High** | Validate with 10+ coaches before code, early paid beta |
+| R10 | Churn due to lack of sustained value | Medium | High | High | Engagement metrics from day 1, client check-ins |
+| R11 | Legal issues from health data | Low | Catastrophic | Medium | Local legal advisor, DPAs, clear terms, granular consents |
+| R12 | Catastrophic DB failure without usable backup | Low | Catastrophic | Medium | Daily backups tested monthly (real restore test) |
 
-**Patrón:** monolito modular con un proyecto por capa por bounded context, más proyectos compartidos.
+**Rule:** risks marked with **High** exposure must have a concrete backlog item each sprint.
+
+## 9.2 Non-technical risks to keep in mind
+
+- **Focus drift:** adding features for a second segment (nutritionists, gym) before dominating the first.
+- **Founder burnout:** no revenue for 6+ months building alone is hard; have clear deadlines and breaks.
+- **Lack of real feedback:** building in a vacuum without real coaches testing.
+
+---
+
+# Level 10 — Backend modules
+
+Now we land the bounded contexts into real .NET code structure.
+
+## 10.1 Solution organization
+
+**Pattern:** modular monolith with one project per layer per bounded context, plus shared projects.
 
 ```
 src/
-├── BuildingBlocks/                           # código compartido, sin dominio
+├── BuildingBlocks/                           # shared code, no domain
 │   ├── BuildingBlocks.Domain/                # base classes: Entity, AggregateRoot, ValueObject, DomainEvent
-│   ├── BuildingBlocks.Application/           # MediatR behaviors, abstractions genéricas
+│   ├── BuildingBlocks.Application/           # MediatR behaviors, generic abstractions
 │   ├── BuildingBlocks.Infrastructure/        # EF interceptors, outbox base, event bus abstraction
-│   └── BuildingBlocks.Api/                   # filtros, middlewares, problem details
+│   └── BuildingBlocks.Api/                   # filters, middlewares, problem details
 │
 ├── Modules/
 │   ├── Identity/
@@ -837,7 +837,7 @@ src/
 │   │   ├── TrainingData.Domain/
 │   │   ├── TrainingData.Application/
 │   │   ├── TrainingData.Infrastructure/
-│   │   │   └── Integrations/                 # un adaptador por proveedor
+│   │   │   └── Integrations/                 # one adapter per provider
 │   │   │       ├── Strava/
 │   │   │       ├── Garmin/
 │   │   │       └── Polar/
@@ -853,7 +853,7 @@ src/
 │   │   ├── Intelligence.Domain/
 │   │   ├── Intelligence.Application/
 │   │   ├── Intelligence.Infrastructure/
-│   │   │   └── Llm/                          # abstracciones + impl Anthropic
+│   │   │   └── Llm/                          # abstractions + Anthropic impl
 │   │   └── Intelligence.Api/
 │   │
 │   └── Communication/
@@ -863,14 +863,14 @@ src/
 │       └── Communication.Api/
 │
 ├── Bootstrap/
-│   └── ApiHost/                              # punto de entrada, compone todos los módulos
+│   └── ApiHost/                              # entry point, composes all modules
 │
 └── Workers/
-    ├── SyncWorker/                           # procesa colas de sincronización
-    ├── AnalysisWorker/                       # readiness, anomalías
-    ├── AiWorker/                             # llamadas a LLM
-    ├── NotificationWorker/                   # dispatch de notificaciones
-    └── OutboxPublisher/                      # publica eventos de outbox al bus
+    ├── SyncWorker/                           # processes sync queues
+    ├── AnalysisWorker/                       # readiness, anomalies
+    ├── AiWorker/                             # LLM calls
+    ├── NotificationWorker/                   # notification dispatch
+    └── OutboxPublisher/                      # publishes outbox events to bus
 
 tests/
 ├── Modules/
@@ -882,24 +882,24 @@ tests/
     └── CriticalFlows/
 ```
 
-## 10.2 Reglas de comunicación entre módulos
+## 10.2 Inter-module communication rules
 
-1. **Módulos no se referencian entre sí en código.** El módulo Coaching no hace `using Intelligence.Domain`. Esto previene dependencias ocultas.
+1. **Modules don't reference each other in code.** The Coaching module doesn't do `using Intelligence.Domain`. This prevents hidden dependencies.
 
-2. **Comunicación entre módulos solo por dos vías:**
-   - **Integration Events** (asincrónico, desacoplado, vía bus).
-   - **Public API** del módulo, expuesta como interface en un proyecto `ModuleX.Contracts` consumible por otros módulos si hace falta lectura síncrona.
+2. **Inter-module communication only via two channels:**
+   - **Integration Events** (asynchronous, decoupled, via bus).
+   - **Module Public API**, exposed as an interface in a `ModuleX.Contracts` project consumable by other modules if synchronous reading is needed.
 
-3. **Cada módulo dueño de su schema de DB.** Los schemas se llaman igual que el módulo: `identity`, `coaching`, `intelligence`, etc.
+3. **Each module owns its DB schema.** Schemas are named the same as the module: `identity`, `coaching`, `intelligence`, etc.
 
-4. **No queries cross-schema.** Si Coaching necesita info de Athlete Profile, la pide via API pública o la recibe via evento.
+4. **No cross-schema queries.** If Coaching needs info from Athlete Profile, it requests it via public API or receives it via event.
 
-## 10.3 Composición en el host
+## 10.3 Host composition
 
-El proyecto `ApiHost` es el único que referencia a todos los `*.Api` de los módulos y los compone:
+The `ApiHost` project is the only one that references all module `*.Api` projects and composes them:
 
 ```
-Program.cs (pseudocódigo conceptual)
+Program.cs (conceptual pseudocode)
     ↓
 builder.Services
     .AddBuildingBlocks()
@@ -915,45 +915,45 @@ app.MapAthleteProfileEndpoints();
 // ... etc
 ```
 
-Cada módulo expone un método de extensión `AddXxxModule` y `MapXxxEndpoints` en su proyecto `.Api`. Esto hace que agregar un módulo nuevo sea una sola línea.
+Each module exposes an extension method `AddXxxModule` and `MapXxxEndpoints` in its `.Api` project. This makes adding a new module a single line.
 
 ---
 
-# Nivel 11 — Modelo de dominio por contexto
+# Level 11 — Domain model per context
 
-Acá describo los agregados principales, eventos y casos de uso de los contextos core. Los contextos genéricos/supporting se resumen.
+Here we describe the main aggregates, events, and use cases of the core contexts. Generic/supporting contexts are summarized.
 
-## 11.1 Coaching Context — detalle
+## 11.1 Coaching Context — detail
 
-### Agregados
+### Aggregates
 
 #### `TrainingPlan` (Aggregate Root)
 
-**Invariantes:**
-- Siempre tiene al menos un objetivo asociado.
-- Las semanas no se superponen ni dejan huecos en el período del plan.
-- Incremento de carga semanal ≤ 10% salvo flag explícito del coach.
-- No hay 2 sesiones de alta intensidad consecutivas sin recuperación ≥24h.
-- Una sesión completada no se modifica; se crea versión nueva del plan.
+**Invariants:**
+- Always has at least one associated goal.
+- Weeks don't overlap or leave gaps in the plan period.
+- Weekly load increase ≤ 10% without explicit coach flag.
+- No 2 consecutive high-intensity sessions without ≥24h recovery.
+- A completed session is not modified; a new plan version is created.
 
-**Entidades internas:**
+**Internal entities:**
 - `TrainingWeek`
 - `PlannedSession`
 
 **Value objects:**
-- `Intensity` (baja, media, umbral, VO2max, neuromuscular)
-- `SessionType` (rodaje, intervalos, tempo, largo, fuerza, descanso, cross-training)
+- `Intensity` (low, medium, threshold, VO2max, neuromuscular)
+- `SessionType` (easy run, intervals, tempo, long run, strength, rest, cross-training)
 - `Duration`
 - `LoadProgression`
 
-**Operaciones clave:**
+**Key operations:**
 - `CreateFromTemplate(templateId, athleteId, startDate)`
 - `CreateFromAiDraft(aiDraftId, coachAdjustments)`
 - `AdjustWeek(weekNumber, changes, reason)`
 - `ApplyCoachSuggestion(suggestionId, overrides?)`
 - `Archive()`
 
-**Eventos emitidos:**
+**Events emitted:**
 - `TrainingPlanCreated`
 - `TrainingPlanAdjusted`
 - `TrainingPlanArchived`
@@ -961,157 +961,157 @@ Acá describo los agregados principales, eventos y casos de uso de los contextos
 
 #### `SessionExecution` (Aggregate Root)
 
-**Responsabilidad:** cómo se ejecutó una sesión, matcheada con lo planificado.
+**Responsibility:** how a session was executed, matched with what was planned.
 
-**Invariantes:**
-- Tiene referencia a `PlannedSessionId` y a una o más `ActivityId` (de Training Data).
-- El status deriva automáticamente del match (`Completada`, `Parcial`, `Sustituida`, `Saltada`).
-- El feedback subjetivo del atleta solo lo puede escribir el atleta.
+**Invariants:**
+- Has reference to `PlannedSessionId` and one or more `ActivityId` (from Training Data).
+- Status is automatically derived from the match (`Completed`, `Partial`, `Substituted`, `Skipped`).
+- Subjective athlete feedback can only be written by the athlete.
 
 **Value objects:**
-- `ComplianceScore` (0-100, derivado de volumen e intensidad)
-- `SubjectiveFeedback` (RPE, ánimo, sueño, dolor muscular)
+- `ComplianceScore` (0-100, derived from volume and intensity)
+- `SubjectiveFeedback` (RPE, mood, sleep, muscle soreness)
 
-**Operaciones clave:**
+**Key operations:**
 - `LinkActivity(activityId)`
 - `RecordSubjectiveFeedback(feedback)`
 - `MarkAsSkipped(reason)`
 - `RecalculateCompliance()`
 
-**Eventos emitidos:**
+**Events emitted:**
 - `SessionExecutionUpdated`
-- `SessionDeviationDetected` (cuando compliance < umbral)
+- `SessionDeviationDetected` (when compliance < threshold)
 
 #### `CoachLibrary` (Aggregate Root)
 
-Biblioteca del coach con templates de sesión, semanas y mesociclos reutilizables. Agregado simple pero útil de modelar explícitamente.
+Coach's library with reusable session, week, and mesocycle templates. Simple but worth modeling explicitly.
 
-### Eventos consumidos (de otros contextos)
+### Events consumed (from other contexts)
 
-- `ActivityIngested` → intenta matchear con `PlannedSession`, crea/actualiza `SessionExecution`.
-- `HealthMetricsUpdated` → trigger de recomputación de métricas derivadas.
-- `CoachSuggestionGenerated` → guardar referencia para que el coach pueda aplicar.
+- `ActivityIngested` → tries to match with `PlannedSession`, creates/updates `SessionExecution`.
+- `HealthMetricsUpdated` → trigger for recomputation of derived metrics.
+- `CoachSuggestionGenerated` → save reference so the coach can apply it.
 
-### Casos de uso principales (Application layer)
+### Main use cases (Application layer)
 
 - `CreateTrainingPlanCommand`
 - `AdjustTrainingWeekCommand`
 - `ApplyCoachSuggestionCommand`
-- `RecordSessionFeedbackCommand` (atleta)
+- `RecordSessionFeedbackCommand` (athlete)
 - `GetAthleteWeekViewQuery`
 - `GetCoachDashboardQuery`
 
 ---
 
-## 11.2 Intelligence Context — detalle
+## 11.2 Intelligence Context — detail
 
-### Agregados
+### Aggregates
 
 #### `AthleteReadinessSnapshot` (Aggregate Root)
 
-Estado diario de preparación del atleta. Se computa cada noche (o bajo demanda).
+Daily athlete readiness state. Computed each night (or on demand).
 
-**Invariantes:**
-- Único por atleta por día.
-- Score global (0-100) derivado de componentes.
-- Tiene un `confidenceScore` basado en cuántos datos reales hay.
+**Invariants:**
+- Unique per athlete per day.
+- Global score (0-100) derived from components.
+- Has a `confidenceScore` based on how much real data is available.
 
-**Componentes calculados:**
-- `HrvTrend` (% vs baseline 28 días).
-- `SleepQuality` (horas + score del wearable).
+**Calculated components:**
+- `HrvTrend` (% vs 28-day baseline).
+- `SleepQuality` (hours + wearable score).
 - `TrainingLoadBalance` (TSB / CTL ratio).
-- `SubjectiveWellness` (del feedback del atleta).
+- `SubjectiveWellness` (from athlete feedback).
 
-**Flags posibles:** `PossibleOvertraining`, `PossibleIllness`, `HighFatigue`, `LowAdherence`, `NormalState`.
+**Possible flags:** `PossibleOvertraining`, `PossibleIllness`, `HighFatigue`, `LowAdherence`, `NormalState`.
 
-**Eventos emitidos:**
+**Events emitted:**
 - `ReadinessSnapshotCalculated`
-- `AnomalyDetected` (si algún flag crítico)
+- `AnomalyDetected` (if any critical flag)
 
 #### `CoachSuggestion` (Aggregate Root)
 
-Una sugerencia generada por IA para el coach sobre un atleta.
+An AI-generated suggestion for the coach about an athlete.
 
-**Invariantes:**
-- Tiene razonamiento textual + datos estructurados que lo soportan.
-- Tiene categoría (`SessionAdjust`, `BlockAdjust`, `Referral`, `Informational`).
-- Tiene `confidenceScore`.
-- Estado: `Pending`, `Accepted`, `ModifiedAndAccepted`, `Rejected`, `Expired`.
-- El feedback del coach es inmutable una vez dado.
+**Invariants:**
+- Has textual reasoning + structured data supporting it.
+- Has a category (`SessionAdjust`, `BlockAdjust`, `Referral`, `Informational`).
+- Has `confidenceScore`.
+- Status: `Pending`, `Accepted`, `ModifiedAndAccepted`, `Rejected`, `Expired`.
+- Coach feedback is immutable once given.
 
-**Operaciones clave:**
+**Key operations:**
 - `Accept(coachId)`
 - `AcceptWithModifications(coachId, modifications, reason?)`
 - `Reject(coachId, reason?)`
-- `Expire()` (pasado cierto tiempo sin respuesta)
+- `Expire()` (after certain time without response)
 
-**Eventos emitidos:**
+**Events emitted:**
 - `CoachSuggestionGenerated`
 - `CoachSuggestionAccepted`
 - `CoachSuggestionRejected`
 
 #### `CoachStyleProfile` (Aggregate Root)
 
-Modelo del estilo del coach, construido a partir de sus aceptaciones/rechazos. Usado para personalizar futuras sugerencias.
+Coach style model, built from their acceptances/rejections. Used to personalize future suggestions.
 
-**Contenido:**
-- Pesos aprendidos por tipo de sugerencia.
-- Preferencias explícitas (zonas de entrenamiento preferidas, estilos de periodización).
-- Estadísticas (tasa de aceptación histórica, tiempo promedio de respuesta).
+**Content:**
+- Learned weights by suggestion type.
+- Explicit preferences (preferred training zones, periodization styles).
+- Statistics (historical acceptance rate, average response time).
 
-### Casos de uso principales
+### Main use cases
 
-- `CalculateReadinessCommand` (disparado por scheduler nocturno)
-- `GenerateWeeklyReviewSuggestionsCommand` (sugerencias de ajuste de plan)
+- `CalculateReadinessCommand` (triggered by nightly scheduler)
+- `GenerateWeeklyReviewSuggestionsCommand` (plan adjustment suggestions)
 - `RecordSuggestionFeedbackCommand`
 - `GetPendingSuggestionsQuery`
 - `GetAthleteReadinessQuery`
 
 ---
 
-## 11.3 Training Data Context — detalle
+## 11.3 Training Data Context — detail
 
-### Agregados
+### Aggregates
 
 #### `AthleteDataSource` (Aggregate Root)
 
-La conexión de un atleta con un proveedor externo.
+An athlete's connection to an external provider.
 
-**Contiene:** tokens OAuth (cifrados), scopes, estado, última sincronización, errores recientes.
+**Contains:** OAuth tokens (encrypted), scopes, status, last sync, recent errors.
 
-**Operaciones:** `Connect`, `Disconnect`, `RefreshToken`, `TriggerSync`, `MarkAsFailed`.
+**Operations:** `Connect`, `Disconnect`, `RefreshToken`, `TriggerSync`, `MarkAsFailed`.
 
 #### `Activity` (Aggregate Root)
 
-Una actividad deportiva ingresada al sistema, ya normalizada.
+A sports activity ingested into the system, already normalized.
 
-**Invariantes:**
-- Único por `(source, externalId)`.
+**Invariants:**
+- Unique per `(source, externalId)`.
 - `startTimestamp < endTimestamp`.
-- TSS se calcula internamente, no se recibe del proveedor.
+- TSS is calculated internally, not received from the provider.
 
 **Value objects:** `ActivityType`, `MetricsSummary`, `GeoRoute`.
 
-**Operaciones:** `LinkToPlannedSession`, `RecalculateMetrics`, `MarkAsManual`.
+**Operations:** `LinkToPlannedSession`, `RecalculateMetrics`, `MarkAsManual`.
 
 #### `HealthMetricSnapshot` (Aggregate Root)
 
-Métricas diarias de salud (sueño, HRV, stress, pasos, peso) de un atleta.
+Daily health metrics (sleep, HRV, stress, steps, weight) for an athlete.
 
-### Integración con proveedores externos (ACL)
+### Integration with external providers (ACL)
 
-Patrón por proveedor:
+Pattern per provider:
 
 ```
 Infrastructure/Integrations/Strava/
 ├── StravaOAuthClient.cs
 ├── StravaActivityFetcher.cs
 ├── StravaWebhookReceiver.cs
-├── StravaActivityMapper.cs     # traduce de modelo Strava a CanonicalActivity
-└── StravaAdapter.cs             # implementa IWearableProvider
+├── StravaActivityMapper.cs     # translates from Strava model to CanonicalActivity
+└── StravaAdapter.cs             # implements IWearableProvider
 ```
 
-Cada adaptador implementa la interfaz `IWearableProvider`:
+Each adapter implements the `IWearableProvider` interface:
 
 ```
 IWearableProvider
@@ -1124,67 +1124,67 @@ IWearableProvider
 
 ---
 
-## 11.4 Athlete Profile Context — resumen
+## 11.4 Athlete Profile Context — summary
 
-### Agregado principal
+### Main aggregate
 
 #### `Athlete` (Aggregate Root)
 
-**Contiene:**
-- Datos biométricos básicos.
-- `TrainingZones` (FC, ritmo, potencia).
-- Historial de lesiones (`InjuryRecord[]`).
-- Objetivos activos (`Goal[]`).
-- Disponibilidad semanal (`WeeklyAvailability`).
+**Contains:**
+- Basic biometric data.
+- `TrainingZones` (HR, pace, power).
+- Injury history (`InjuryRecord[]`).
+- Active goals (`Goal[]`).
+- Weekly availability (`WeeklyAvailability`).
 - Baselines (`HrvBaseline`, `RestingHrBaseline`).
 
-**Invariantes:**
-- Las zonas nunca se superponen incorrectamente.
-- No hay 2 objetivos activos con el mismo evento en la misma fecha.
-- Los baselines se actualizan solo con datos validados.
+**Invariants:**
+- Zones never overlap incorrectly.
+- No 2 active goals with the same event on the same date.
+- Baselines are updated only with validated data.
 
-**Operaciones:** `RecalibrateZones`, `RegisterInjury`, `UpdateBaseline`, `SetAvailability`.
-
----
-
-## 11.5 Identity Context — resumen
-
-### Agregados
-
-- `User` — identidad básica y credenciales.
-- `Coach` — extensión de User con datos de coach (tenant owner).
-- `AthleteAccount` — extensión de User para atletas (puede estar en múltiples coaches a lo largo del tiempo).
-- `Invitation` — token de invitación con expiración.
-- `Session` / `RefreshToken` — gestión de sesiones.
-
-Si se terceriza a Clerk/Auth0, este contexto se simplifica a un adaptador + el concepto de negocio de "Coach" y "Atleta" extendidos sobre el usuario externo.
+**Operations:** `RecalibrateZones`, `RegisterInjury`, `UpdateBaseline`, `SetAvailability`.
 
 ---
 
-## 11.6 Communication Context — resumen
+## 11.5 Identity Context — summary
 
-### Agregados
+### Aggregates
 
-- `ConversationThread` — hilo coach-atleta.
-- `Message` — mensaje dentro de un thread.
-- `Notification` — notificación generada por eventos de otros contextos, con preferencias aplicadas.
+- `User` — basic identity and credentials.
+- `Coach` — User extension with coach data (tenant owner).
+- `AthleteAccount` — User extension for athletes (can be with multiple coaches over time).
+- `Invitation` — invitation token with expiration.
+- `Session` / `RefreshToken` — session management.
 
-### Eventos consumidos de otros contextos
-
-Communication se suscribe a muchos eventos y decide qué notificar:
-- `TrainingPlanAdjusted` → notifica al atleta.
-- `CoachSuggestionGenerated` (si alta confianza) → notifica al coach.
-- `SessionDeviationDetected` → notifica al coach.
-- `ActivityIngested` (grandes) → notifica al coach.
+If outsourced to Clerk/Auth0, this context simplifies to an adapter + the business concept of "Coach" and "Athlete" extended on the external user.
 
 ---
 
-## 11.7 Integration events (el "lenguaje publicado" entre contextos)
+## 11.6 Communication Context — summary
 
-Lista de eventos cross-context estables. Estos son contratos que no cambian a la ligera.
+### Aggregates
 
-| Evento | Emisor | Consumidores típicos |
-|--------|--------|----------------------|
+- `ConversationThread` — coach-athlete thread.
+- `Message` — message within a thread.
+- `Notification` — notification generated by events from other contexts, with preferences applied.
+
+### Events consumed from other contexts
+
+Communication subscribes to many events and decides what to notify:
+- `TrainingPlanAdjusted` → notifies the athlete.
+- `CoachSuggestionGenerated` (if high confidence) → notifies the coach.
+- `SessionDeviationDetected` → notifies the coach.
+- `ActivityIngested` (large ones) → notifies the coach.
+
+---
+
+## 11.7 Integration events (the "published language" between contexts)
+
+List of stable cross-context events. These are contracts that don't change lightly.
+
+| Event | Emitter | Typical consumers |
+|-------|---------|-------------------|
 | `UserRegistered` | Identity | AthleteProfile, Communication |
 | `AthleteInvitedToCoach` | Identity | AthleteProfile, Coaching |
 | `AthleteProfileUpdated` | AthleteProfile | Coaching, Intelligence |
@@ -1194,108 +1194,108 @@ Lista de eventos cross-context estables. Estos son contratos que no cambian a la
 | `TrainingPlanCreated` | Coaching | Communication, Intelligence |
 | `TrainingPlanAdjusted` | Coaching | Communication, Intelligence |
 | `SessionExecutionUpdated` | Coaching | Intelligence |
-| `ReadinessSnapshotCalculated` | Intelligence | Coaching (para dashboard) |
+| `ReadinessSnapshotCalculated` | Intelligence | Coaching (for dashboard) |
 | `CoachSuggestionGenerated` | Intelligence | Coaching, Communication |
 | `CoachSuggestionAccepted` | Coaching | Intelligence (learning loop) |
 | `CoachSuggestionRejected` | Coaching | Intelligence (learning loop) |
 
-**Versionado:** cada evento tiene versión en el schema. Cambios breaking → versión nueva, compatibilidad con versión anterior durante período de transición.
+**Versioning:** each event has a version in the schema. Breaking changes → new version, backward compatibility with previous version during transition period.
 
 ---
 
-# Nivel 12 — Flujos end-to-end críticos
+# Level 12 — Critical end-to-end flows
 
-Esta sección es oro para entender el sistema. Escribimos los flujos como secuencias de pasos, nombrando los componentes que participan.
+This section is gold for understanding the system. We write flows as sequences of steps, naming the participating components.
 
-## 12.1 Flujo: Atleta conecta Strava y su primera actividad aparece en dashboard del coach
+## 12.1 Flow: Athlete connects Strava and their first activity appears on the coach's dashboard
 
-**Participantes:** PWA Atleta, Identity API, TrainingData API, Strava API, SyncWorker, Outbox Publisher, Event Bus, Coaching handler, Intelligence handler, Dashboard Coach.
+**Participants:** Athlete PWA, Identity API, TrainingData API, Strava API, SyncWorker, Outbox Publisher, Event Bus, Coaching handler, Intelligence handler, Coach Dashboard.
 
-**Secuencia:**
+**Sequence:**
 
-1. Atleta en la PWA toca "Conectar Strava".
-2. Frontend redirige a `/oauth/strava/authorize` (TrainingData API), que genera state y redirige a Strava.
-3. Atleta autoriza en Strava.
-4. Strava redirige al callback `/oauth/strava/callback` con authorization code.
+1. Athlete in the PWA taps "Connect Strava".
+2. Frontend redirects to `/oauth/strava/authorize` (TrainingData API), which generates state and redirects to Strava.
+3. Athlete authorizes on Strava.
+4. Strava redirects to callback `/oauth/strava/callback` with authorization code.
 5. TrainingData API:
-    - Valida state.
-    - Intercambia code por tokens via `StravaOAuthClient`.
-    - Crea agregado `AthleteDataSource` con tokens cifrados.
-    - Dispara caso de uso `InitialSyncCommand`.
-    - Persiste agregado + evento en outbox en misma transacción.
-6. `OutboxPublisher` lee outbox, publica `DataSourceConnected` al bus.
-7. `SyncWorker` consume `DataSourceConnected` e inicia sync histórico (último 30 días).
-8. Para cada actividad fetched de Strava:
-    - Mapeo a `CanonicalActivity` via `StravaActivityMapper`.
-    - Persistencia de agregado `Activity`.
-    - Evento `ActivityIngested` al outbox.
-9. `OutboxPublisher` publica `ActivityIngested`.
-10. **Coaching handler** consume `ActivityIngested`:
-    - Busca `PlannedSession` matcheable por fecha + tipo.
-    - Crea o actualiza `SessionExecution`.
-    - Emite `SessionExecutionUpdated`.
-11. **Intelligence handler** consume `ActivityIngested`:
-    - Actualiza métricas agregadas del atleta (TSS, CTL, ATL).
-    - Si detecta patrón anómalo, genera sugerencia.
-12. En paralelo, atleta ve "Strava conectado ✅" inmediatamente (paso 5 ya completó).
-13. Coach, al refrescar dashboard, ve las actividades nuevas y cualquier sugerencia generada.
+    - Validates state.
+    - Exchanges code for tokens via `StravaOAuthClient`.
+    - Creates `AthleteDataSource` aggregate with encrypted tokens.
+    - Triggers `InitialSyncCommand` use case.
+    - Persists aggregate + event in outbox in same transaction.
+6. `OutboxPublisher` reads outbox, publishes `DataSourceConnected` to bus.
+7. `SyncWorker` consumes `DataSourceConnected` and starts historical sync (last 30 days).
+8. For each activity fetched from Strava:
+    - Map to `CanonicalActivity` via `StravaActivityMapper`.
+    - Persist `Activity` aggregate.
+    - `ActivityIngested` event to outbox.
+9. `OutboxPublisher` publishes `ActivityIngested`.
+10. **Coaching handler** consumes `ActivityIngested`:
+    - Finds matchable `PlannedSession` by date + type.
+    - Creates or updates `SessionExecution`.
+    - Emits `SessionExecutionUpdated`.
+11. **Intelligence handler** consumes `ActivityIngested`:
+    - Updates athlete's aggregated metrics (TSS, CTL, ATL).
+    - If anomalous pattern detected, generates suggestion.
+12. In parallel, athlete sees "Strava connected ✅" immediately (step 5 already completed).
+13. Coach, when refreshing dashboard, sees new activities and any generated suggestions.
 
-**Garantías:**
-- Si el sync falla a mitad de camino, se retoma por actividad no duplicada.
-- Si la API cae después del paso 5, el atleta ve la conexión exitosa pero el sync se completa en segundo plano.
-- Si el mapping falla para una actividad, las demás continúan.
+**Guarantees:**
+- If sync fails mid-way, it's resumed per non-duplicated activity.
+- If the API goes down after step 5, the athlete sees successful connection but the sync completes in the background.
+- If mapping fails for one activity, the others continue.
 
-## 12.2 Flujo: Generación y aplicación de sugerencia semanal
+## 12.2 Flow: Generation and application of a weekly suggestion
 
-**Participantes:** Scheduler, AI Worker, Intelligence Application, LLM (Anthropic), Coaching API, Dashboard Coach.
+**Participants:** Scheduler, AI Worker, Intelligence Application, LLM (Anthropic), Coaching API, Coach Dashboard.
 
-**Secuencia:**
+**Sequence:**
 
-1. Todos los lunes a las 06:00 UTC-3, un scheduled job enqueue `GenerateWeeklyReviewCommand` por cada coach activo.
-2. `AI Worker` consume los comandos uno a uno.
-3. Para cada coach, el worker:
-    - Obtiene la lista de atletas activos.
-    - Para cada atleta: construye contexto (plan actual, últimas 2-4 semanas de ejecución, readiness snapshots, objetivos, historial de lesiones).
-    - Llama a `IInsightGenerator` (implementación Anthropic) con prompt estructurado + contexto.
-    - LLM retorna JSON estructurado con sugerencias (o "sin acción necesaria").
-    - Validación de JSON contra schema; si falla, reintento con feedback.
-    - Crea agregados `CoachSuggestion` uno por recomendación.
-    - Persiste + outbox `CoachSuggestionGenerated`.
-4. Communication handler consume `CoachSuggestionGenerated` y envía notificación al coach.
-5. Lunes 9:00 AM, coach abre dashboard.
-6. Dashboard llama `GetCoachDashboardQuery` que retorna atletas priorizados + sugerencias pendientes.
-7. Coach tap "Aceptar" en una sugerencia.
-8. Frontend llama `ApplyCoachSuggestionCommand` en Coaching API.
+1. Every Monday at 06:00 UTC-3, a scheduled job enqueues `GenerateWeeklyReviewCommand` for each active coach.
+2. `AI Worker` consumes the commands one by one.
+3. For each coach, the worker:
+    - Gets the list of active athletes.
+    - For each athlete: builds context (current plan, last 2-4 weeks of execution, readiness snapshots, goals, injury history).
+    - Calls `IInsightGenerator` (Anthropic implementation) with structured prompt + context.
+    - LLM returns structured JSON with suggestions (or "no action needed").
+    - JSON validation against schema; if fails, retry with feedback.
+    - Creates `CoachSuggestion` aggregates, one per recommendation.
+    - Persists + outbox `CoachSuggestionGenerated`.
+4. Communication handler consumes `CoachSuggestionGenerated` and sends notification to coach.
+5. Monday 9:00 AM, coach opens dashboard.
+6. Dashboard calls `GetCoachDashboardQuery` which returns prioritized athletes + pending suggestions.
+7. Coach taps "Accept" on a suggestion.
+8. Frontend calls `ApplyCoachSuggestionCommand` on Coaching API.
 9. Coaching API:
-    - Carga `CoachSuggestion` via public API de Intelligence.
-    - Carga `TrainingPlan` del atleta.
-    - Aplica los cambios sugeridos al plan (nueva versión).
-    - Persiste + outbox `CoachSuggestionAccepted` + `TrainingPlanAdjusted`.
-10. Intelligence handler consume `CoachSuggestionAccepted` y actualiza `CoachStyleProfile` (aprende).
-11. Communication handler consume `TrainingPlanAdjusted` y notifica al atleta.
+    - Loads `CoachSuggestion` via Intelligence public API.
+    - Loads athlete's `TrainingPlan`.
+    - Applies suggested changes to plan (new version).
+    - Persists + outbox `CoachSuggestionAccepted` + `TrainingPlanAdjusted`.
+10. Intelligence handler consumes `CoachSuggestionAccepted` and updates `CoachStyleProfile` (learns).
+11. Communication handler consumes `TrainingPlanAdjusted` and notifies athlete.
 
-## 12.3 Flujo: Atleta registra feedback subjetivo de sesión
+## 12.3 Flow: Athlete records subjective session feedback
 
-1. Atleta completa corrida (Garmin la sube a Strava → ya la tenemos en el sistema por flujo 12.1).
-2. Atleta en la PWA ve "¿Cómo fue la sesión?" con controles rápidos (RPE 1-10, ánimo, sueño anoche).
-3. Atleta completa, frontend llama `RecordSessionFeedbackCommand` en Coaching API.
-4. Coaching API carga `SessionExecution`, agrega feedback, persiste + emite `SessionExecutionUpdated`.
-5. Intelligence handler consume y ajusta readiness del día si aplica.
-6. Si RPE muy alto + deviación grande → Intelligence genera sugerencia inmediata (no espera al lunes).
+1. Athlete completes a run (Garmin uploads it to Strava → we already have it in the system via flow 12.1).
+2. Athlete in the PWA sees "How was the session?" with quick controls (RPE 1-10, mood, last night's sleep).
+3. Athlete fills it in, frontend calls `RecordSessionFeedbackCommand` on Coaching API.
+4. Coaching API loads `SessionExecution`, adds feedback, persists + emits `SessionExecutionUpdated`.
+5. Intelligence handler consumes and adjusts day's readiness if applicable.
+6. If very high RPE + large deviation → Intelligence generates an immediate suggestion (doesn't wait until Monday).
 
-## 12.4 Flujo: Recuperación de token OAuth revocado
+## 12.4 Flow: Revoked OAuth token recovery
 
-1. `SyncWorker` intenta sync, Strava responde `401 Unauthorized`.
-2. Worker verifica si es token expirado → intenta refresh. Si funciona, continúa.
-3. Si el refresh también falla (revocado), worker marca `AthleteDataSource` como `Disconnected` con razón `ExternalRevocation`.
-4. Emite `DataSourceDisconnected`.
-5. Communication notifica al atleta: "Tu conexión con Strava se perdió. Reconectá tocando acá.".
+1. `SyncWorker` attempts sync, Strava responds `401 Unauthorized`.
+2. Worker checks if it's an expired token → attempts refresh. If successful, continues.
+3. If the refresh also fails (revoked), worker marks `AthleteDataSource` as `Disconnected` with reason `ExternalRevocation`.
+4. Emits `DataSourceDisconnected`.
+5. Communication notifies the athlete: "Your Strava connection was lost. Reconnect by tapping here."
 
 ---
 
-# Nivel 13 — Clean Architecture interna y tecnologías
+# Level 13 — Internal Clean Architecture and technologies
 
-## 13.1 Estructura interna de un módulo (ejemplo: Coaching)
+## 13.1 Internal structure of a module (example: Coaching)
 
 ```
 Coaching.Domain/
@@ -1313,15 +1313,15 @@ Coaching.Domain/
 │   └── SessionExecutionAggregate/
 │       └── ...
 ├── DomainServices/
-│   └── LoadProgressionPolicy.cs           # lógica que no pertenece a un agregado
+│   └── LoadProgressionPolicy.cs           # logic that doesn't belong to an aggregate
 ├── Repositories/
-│   ├── ITrainingPlanRepository.cs         # solo interfaces
+│   ├── ITrainingPlanRepository.cs         # interfaces only
 │   └── ISessionExecutionRepository.cs
 ├── Exceptions/
 │   ├── InvalidPlanAdjustmentException.cs
 │   └── LoadProgressionViolatedException.cs
-└── SeedWork/                              # base classes del módulo si hacen falta
-    └── (usualmente vacío si se usa BuildingBlocks.Domain)
+└── SeedWork/                              # module base classes if needed
+    └── (usually empty if BuildingBlocks.Domain is used)
 
 Coaching.Application/
 ├── UseCases/
@@ -1335,17 +1335,17 @@ Coaching.Application/
 │   ├── GetAthleteWeekView/                # query
 │   └── GetCoachDashboard/                 # query
 ├── IntegrationEventHandlers/
-│   ├── OnActivityIngestedHandler.cs       # de TrainingData
-│   ├── OnAthleteProfileUpdatedHandler.cs  # de AthleteProfile
+│   ├── OnActivityIngestedHandler.cs       # from TrainingData
+│   ├── OnAthleteProfileUpdatedHandler.cs  # from AthleteProfile
 │   └── OnCoachSuggestionGeneratedHandler.cs
-├── Abstractions/                          # puertos hacia infra
+├── Abstractions/                          # ports toward infra
 │   ├── IIntegrationEventBus.cs
-│   ├── IAthleteProfileApi.cs              # public API de otro módulo
+│   ├── IAthleteProfileApi.cs              # public API of another module
 │   └── IIntelligenceApi.cs
-├── Dtos/                                  # internos, no los de la API
+├── Dtos/                                  # internal, not the API ones
 │   ├── AthleteWeekView.cs
 │   └── CoachDashboardView.cs
-└── Behaviors/                             # MediatR pipeline (opcional si no está en BuildingBlocks)
+└── Behaviors/                             # MediatR pipeline (optional if not in BuildingBlocks)
 
 Coaching.Infrastructure/
 ├── Persistence/
@@ -1373,7 +1373,7 @@ Coaching.Api/
 │   │   └── AdjustTrainingWeekEndpoint.cs
 │   └── SessionExecutions/
 │       └── RecordFeedbackEndpoint.cs
-├── Contracts/                             # request/response de la API, separado de Application DTOs
+├── Contracts/                             # API request/response, separate from Application DTOs
 │   ├── Requests/
 │   └── Responses/
 ├── Mapping/
@@ -1382,166 +1382,166 @@ Coaching.Api/
     └── CoachAccessRequirement.cs
 ```
 
-## 13.2 Stack tecnológico consolidado
+## 13.2 Consolidated tech stack
 
 ### Backend
-| Capa | Tecnología | Por qué |
-|------|------------|---------|
-| Lenguaje | C# 12 / .NET 8 | Maduro para DDD, performance top-tier, mercado laboral |
-| Web framework | ASP.NET Core Minimal APIs | Moderno, bajo overhead |
-| Mediator | MediatR | Estándar de facto para CQRS-light en .NET |
-| Validación | FluentValidation | Composable, testeable |
-| ORM | EF Core 8 | Maduro, soporta DDD bien con configuraciones |
-| Migrations | EF Core Migrations | Versionado, reversible |
-| Background jobs | Hangfire | UI incluida, reintentos, scheduled jobs |
-| Mapping | Mapperly (source-gen) o manual | Sin reflection, performante |
-| Logging | Serilog | Estructurado, sinks ricos |
-| Observability | OpenTelemetry (.NET SDK) | Estándar abierto |
-| Errors | Sentry.NET | Error tracking contextual |
-| Testing | MSTest (mantengo continuidad con curso) + FluentAssertions + Testcontainers + Bogus | Lo que ya uso |
-| HTTP client | Refit o HttpClient + DelegatingHandlers | Tipado, testeable |
+| Layer | Technology | Why |
+|-------|------------|-----|
+| Language | C# 12 / .NET 8 | Mature for DDD, top-tier performance, job market |
+| Web framework | ASP.NET Core Minimal APIs | Modern, low overhead |
+| Mediator | MediatR | De facto standard for CQRS-light in .NET |
+| Validation | FluentValidation | Composable, testable |
+| ORM | EF Core 8 | Mature, supports DDD well with configurations |
+| Migrations | EF Core Migrations | Versioned, reversible |
+| Background jobs | Hangfire | Built-in UI, retries, scheduled jobs |
+| Mapping | Mapperly (source-gen) or manual | No reflection, performant |
+| Logging | Serilog | Structured, rich sinks |
+| Observability | OpenTelemetry (.NET SDK) | Open standard |
+| Errors | Sentry.NET | Contextual error tracking |
+| Testing | MSTest (course continuity) + FluentAssertions + Testcontainers + Bogus | Already in use |
+| HTTP client | Refit or HttpClient + DelegatingHandlers | Typed, testable |
 
 ### Data
-| Componente | Tecnología |
-|------------|------------|
-| DB transaccional | PostgreSQL 16 |
-| Time-series | TimescaleDB (extensión) |
-| Vectorial | pgvector (extensión) |
+| Component | Technology |
+|-----------|------------|
+| Transactional DB | PostgreSQL 16 |
+| Time-series | TimescaleDB (extension) |
+| Vector | pgvector (extension) |
 | Cache / event bus MVP | Redis 7 |
-| Object storage | Cloudflare R2 (S3-compatible, barato) |
+| Object storage | Cloudflare R2 (S3-compatible, cheap) |
 
-### Integraciones externas
-| Propósito | Servicio |
-|-----------|----------|
-| LLM | Anthropic (Claude Sonnet / Haiku según tarea) |
+### External integrations
+| Purpose | Service |
+|---------|---------|
+| LLM | Anthropic (Claude Sonnet / Haiku per task) |
 | Wearables | Garmin Connect, Strava, Polar, Suunto, COROS (gradual) |
-| Email transaccional | Resend o SendGrid |
-| Auth (si se terceriza) | Clerk (opción A) o ASP.NET Core Identity (opción B) |
-| Pagos (fase 2) | Stripe + MercadoPago |
-| Monitoring | Grafana Cloud free tier o Better Stack |
+| Transactional email | Resend or SendGrid |
+| Auth (if outsourced) | Clerk (option A) or ASP.NET Core Identity (option B) |
+| Payments (phase 2) | Stripe + MercadoPago |
+| Monitoring | Grafana Cloud free tier or Better Stack |
 
 ### Frontend
-| Componente | Tecnología |
-|------------|------------|
+| Component | Technology |
+|-----------|------------|
 | Framework | React 18 + TypeScript + Vite |
 | Routing | TanStack Router |
 | Server state | TanStack Query |
 | Client state | Zustand |
 | Forms | React Hook Form + Zod |
 | Styling | Tailwind + shadcn/ui |
-| Charts | Recharts o Visx |
+| Charts | Recharts or Visx |
 | PWA | Vite PWA plugin + Workbox |
 | Testing | Vitest + React Testing Library + Playwright (E2E) |
 
 ### Monorepo (frontends)
-| Herramienta | Uso |
-|-------------|-----|
-| pnpm workspaces | Gestión de paquetes |
-| Turborepo | Orquestación de builds + cache |
+| Tool | Use |
+|------|-----|
+| pnpm workspaces | Package management |
+| Turborepo | Build orchestration + cache |
 
 ### DevOps
-| Componente | Tecnología |
-|------------|------------|
-| Contenedores | Docker |
+| Component | Technology |
+|-----------|------------|
+| Containers | Docker |
 | CI/CD | GitHub Actions |
-| Hosting MVP | Railway o Fly.io |
-| IaC (cuando aplique) | Terraform o Pulumi |
+| Hosting MVP | Railway or Fly.io |
+| IaC (when applicable) | Terraform or Pulumi |
 
-## 13.3 Patrones técnicos clave
+## 13.3 Key technical patterns
 
-1. **Outbox pattern:** eventos de integración en tabla `outbox` dentro de la misma transacción que el agregado. Worker publica al bus.
-2. **Inbox pattern:** eventos consumidos registrados en tabla `inbox` para idempotencia.
-3. **CQRS light:** commands pasan por agregados; queries leen directo a proyecciones/DTOs.
-4. **Anticorruption Layer:** una implementación por proveedor externo, traducción a modelo canónico.
-5. **Specification pattern:** para queries complejas reutilizables.
-6. **Domain events in-process:** despachados por MediatR dentro de la misma unidad de trabajo.
-7. **Strongly-typed IDs:** records en Domain, convertidos por EF a columnas de DB.
-8. **Result pattern:** errores esperables como valores, no excepciones; excepciones solo para casos realmente excepcionales.
-9. **Pipeline behaviors (MediatR):** logging, validation, transaction, authorization aplicados transversalmente.
-10. **Feature flags:** control granular de features nuevas en producción.
+1. **Outbox pattern:** integration events in `outbox` table within the same transaction as the aggregate. Worker publishes to bus.
+2. **Inbox pattern:** consumed events recorded in `inbox` table for idempotency.
+3. **CQRS light:** commands go through aggregates; queries read directly to projections/DTOs.
+4. **Anticorruption Layer:** one implementation per external provider, translation to canonical model.
+5. **Specification pattern:** for reusable complex queries.
+6. **Domain events in-process:** dispatched by MediatR within the same unit of work.
+7. **Strongly-typed IDs:** records in Domain, converted by EF to DB columns.
+8. **Result pattern:** expected errors as values, not exceptions; exceptions only for truly exceptional cases.
+9. **Pipeline behaviors (MediatR):** logging, validation, transaction, authorization applied cross-cutting.
+10. **Feature flags:** granular control of new features in production.
 
-## 13.4 Estrategia de testing
+## 13.4 Testing strategy
 
-| Nivel | Herramientas | Cobertura objetivo | Qué testea |
-|-------|--------------|---------------------|-------------|
-| Unit — Domain | MSTest + FluentAssertions | 90%+ | Invariantes de agregados, value objects, domain services |
-| Unit — Application | MSTest + NSubstitute | 70%+ | Casos de uso con mocks |
-| Integration | MSTest + Testcontainers (PostgreSQL real) | 60%+ | Repos, handlers de eventos, flujos intra-contexto |
-| Contract | MSTest | 100% de integraciones externas | Adapters de proveedores externos |
-| E2E | Playwright | 5-10 flujos críticos | Flujos user-facing |
-| Performance | k6 o NBomber | Endpoints críticos | Latencia bajo carga |
-| Security | OWASP ZAP + Snyk | Automatizado en CI | Vulnerabilidades comunes |
+| Level | Tools | Target coverage | What it tests |
+|-------|-------|-----------------|---------------|
+| Unit — Domain | MSTest + FluentAssertions | 90%+ | Aggregate invariants, value objects, domain services |
+| Unit — Application | MSTest + NSubstitute | 70%+ | Use cases with mocks |
+| Integration | MSTest + Testcontainers (real PostgreSQL) | 60%+ | Repos, event handlers, intra-context flows |
+| Contract | MSTest | 100% of external integrations | External provider adapters |
+| E2E | Playwright | 5-10 critical flows | User-facing flows |
+| Performance | k6 or NBomber | Critical endpoints | Latency under load |
+| Security | OWASP ZAP + Snyk | Automated in CI | Common vulnerabilities |
 
 ---
 
-# Nivel 14 — Infraestructura, CI/CD y ambientes
+# Level 14 — Infrastructure, CI/CD and environments
 
-## 14.1 Ambientes
+## 14.1 Environments
 
-| Ambiente | Propósito | Data | Costos |
-|----------|-----------|------|--------|
-| `local` | Dev en máquina del dev | Docker Compose con fixtures | 0 |
-| `dev` | Rama `develop` desplegada, branch previews | Sintética | ~20 USD/mes |
-| `staging` | Pre-producción, QA, pruebas de integración | Anonimizada o sintética rica | ~40 USD/mes |
-| `prod` | Producción real | Real | Variable |
+| Environment | Purpose | Data | Costs |
+|-------------|---------|------|-------|
+| `local` | Dev on dev machine | Docker Compose with fixtures | 0 |
+| `dev` | `develop` branch deployed, branch previews | Synthetic | ~20 USD/month |
+| `staging` | Pre-production, QA, integration tests | Anonymized or rich synthetic | ~40 USD/month |
+| `prod` | Real production | Real | Variable |
 
-## 14.2 Infraestructura por ambiente (MVP)
+## 14.2 Infrastructure per environment (MVP)
 
-**MVP - Railway o Fly.io:**
-- 1 servicio API
-- 1-2 servicios Worker
-- PostgreSQL gestionado (con TimescaleDB)
-- Redis gestionado
-- Cloudflare R2 para object storage
-- Cloudflare como CDN + WAF gratuito
+**MVP - Railway or Fly.io:**
+- 1 API service
+- 1-2 Worker services
+- Managed PostgreSQL (with TimescaleDB)
+- Managed Redis
+- Cloudflare R2 for object storage
+- Cloudflare as free CDN + WAF
 
-**Post-tracción - AWS:**
-- ECS Fargate para API + workers
-- RDS PostgreSQL Multi-AZ con TimescaleDB
+**Post-traction - AWS:**
+- ECS Fargate for API + workers
+- RDS PostgreSQL Multi-AZ with TimescaleDB
 - ElastiCache Redis
 - S3 + CloudFront
 - Secrets Manager
 - Route 53 + ACM
 
-## 14.3 Pipeline CI/CD (GitHub Actions)
+## 14.3 CI/CD Pipeline (GitHub Actions)
 
-### Pipeline de PR (en cada push a branch)
+### PR pipeline (on each push to branch)
 1. Checkout.
 2. Setup .NET 8.
-3. Restore dependencias.
-4. Build en modo Release.
+3. Restore dependencies.
+4. Build in Release mode.
 5. Lint (dotnet format --verify).
-6. Ejecutar unit tests + integration tests con Testcontainers.
-7. Cobertura de tests publicada.
-8. Dependency scan (Snyk o equivalente).
+6. Run unit tests + integration tests with Testcontainers.
+7. Test coverage published.
+8. Dependency scan (Snyk or equivalent).
 9. Secret scan (gitleaks).
-10. Build Docker image para verificar que buildea.
-11. Bloquea merge si algo falla.
+10. Build Docker image to verify it builds.
+11. Block merge if anything fails.
 
-### Pipeline de `develop` (después de merge)
-1. Todo lo anterior.
-2. Build + push de Docker image etiquetada con commit SHA.
-3. Deploy automático a ambiente `dev`.
-4. Smoke tests post-deploy.
+### `develop` pipeline (after merge)
+1. Everything above.
+2. Build + push Docker image tagged with commit SHA.
+3. Automatic deploy to `dev` environment.
+4. Post-deploy smoke tests.
 
-### Pipeline de `main` (después de merge con approval)
-1. Todo lo de develop.
-2. Deploy a `staging` automático.
-3. Aprobación manual gate.
-4. Deploy a `prod` con estrategia rolling.
-5. Monitoreo post-deploy (5 min) con rollback automático si error rate spike.
+### `main` pipeline (after merge with approval)
+1. Everything from develop.
+2. Automatic deploy to `staging`.
+3. Manual approval gate.
+4. Deploy to `prod` with rolling strategy.
+5. Post-deploy monitoring (5 min) with automatic rollback on error rate spike.
 
-### Pipeline nocturno
-1. Tests de restore de backup en ambiente efímero.
+### Nightly pipeline
+1. Backup restore test in ephemeral environment.
 2. Dependency update check.
 3. Performance smoke test.
 
-## 14.4 Estrategia de branches (Gitflow adaptado)
+## 14.4 Branch strategy (adapted Gitflow)
 
 ```
 main       ────────────────────────●───●──────  (prod)
                                   /   /
-release    ───────●───────●─────/───/─────────  (staging fijo)
+release    ───────●───────●─────/───/─────────  (staging fixed)
                  /       /     /   /
 develop    ──●──●───●───●─────●───●──────────   (dev)
              \  \    \   \
@@ -1549,238 +1549,238 @@ feature      ●──●    ●    ●   (feature branches)
 ```
 
 - `main` = prod.
-- `develop` = dev ambiente, integración continua.
-- `feature/*` = branches de features.
-- `release/*` = estabilización pre-prod.
-- `hotfix/*` = parches urgentes desde main.
+- `develop` = dev environment, continuous integration.
+- `feature/*` = feature branches.
+- `release/*` = pre-prod stabilization.
+- `hotfix/*` = urgent patches from main.
 
-Commits en Conventional Commits en español (como ya venís haciendo).
+Commits in Conventional Commits in English.
 
-## 14.5 Observabilidad
+## 14.5 Observability
 
 ### Stack
-- **Logs:** Serilog → Grafana Loki o Better Stack Logs.
-- **Métricas:** OpenTelemetry → Prometheus + Grafana.
-- **Traces:** OpenTelemetry → Tempo o Honeycomb.
-- **Errores:** Sentry.
-- **Uptime:** Better Uptime o UptimeRobot.
+- **Logs:** Serilog → Grafana Loki or Better Stack Logs.
+- **Metrics:** OpenTelemetry → Prometheus + Grafana.
+- **Traces:** OpenTelemetry → Tempo or Honeycomb.
+- **Errors:** Sentry.
+- **Uptime:** Better Uptime or UptimeRobot.
 
-### Dashboards obligatorios
-1. **Técnico (para on-call):** latencia p50/p95/p99, error rate, saturación, colas pendientes, DB connections.
-2. **Integraciones:** success rate por proveedor, tokens expirados, actividades pendientes.
-3. **IA:** latencia de LLM, tokens consumidos, costo por día, tasa de errores de parsing.
-4. **Producto (para founder):** MAU/WAU, sugerencias generadas, tasa de aceptación, actividades ingestadas, NPS in-app.
+### Mandatory dashboards
+1. **Technical (for on-call):** latency p50/p95/p99, error rate, saturation, pending queues, DB connections.
+2. **Integrations:** success rate per provider, expired tokens, pending activities.
+3. **AI:** LLM latency, tokens consumed, cost per day, parsing error rate.
+4. **Product (for founder):** MAU/WAU, suggestions generated, acceptance rate, activities ingested, in-app NPS.
 
-### Alertas (ejemplo)
-| Condición | Severidad | Canal |
-|-----------|-----------|-------|
-| Error rate > 2% en 5 min | High | Push + email |
-| Latencia p95 > 3s en 10 min | Medium | Email |
-| Cola pendiente > 1000 msgs | High | Push |
-| Costo LLM día > umbral | Medium | Email diario |
-| Backup nightly failed | Critical | Push inmediato |
+### Alerts (example)
+| Condition | Severity | Channel |
+|-----------|----------|---------|
+| Error rate > 2% in 5 min | High | Push + email |
+| p95 latency > 3s in 10 min | Medium | Email |
+| Pending queue > 1000 msgs | High | Push |
+| LLM day cost > threshold | Medium | Daily email |
+| Nightly backup failed | Critical | Immediate push |
 
-## 14.6 Gestión de secretos
+## 14.6 Secrets management
 
-- **Nunca en código ni en env vars versionados.**
-- **Local dev:** `.env.local` en `.gitignore`, ejemplo en `.env.example`.
+- **Never in code or in versioned env vars.**
+- **Local dev:** `.env.local` in `.gitignore`, example in `.env.example`.
 - **Cloud:** Secrets Manager (AWS/Doppler/Railway secrets).
-- **Rotación automática** trimestral para credenciales críticas.
-- **Acceso con menor privilegio** + audit log.
+- **Automatic rotation** quarterly for critical credentials.
+- **Least privilege access** + audit log.
 
-## 14.7 Estrategia de backups
+## 14.7 Backup strategy
 
-- **DB:** snapshots diarios, retención 30 días; snapshots semanales retenidos 90 días.
-- **Test de restore mensual** en ambiente efímero (si nunca restauraste, no tenés backup).
-- **Object storage:** versionado habilitado + lifecycle a cold storage tras 30 días.
-- **Backups cross-region** para DR (cuando el negocio lo justifique).
+- **DB:** daily snapshots, 30-day retention; weekly snapshots retained 90 days.
+- **Monthly restore test** in ephemeral environment (if you've never restored, you don't have a backup).
+- **Object storage:** versioning enabled + lifecycle to cold storage after 30 days.
+- **Cross-region backups** for DR (when the business justifies it).
 
 ---
 
-# Nivel 15 — Roadmap y fases de construcción
+# Level 15 — Roadmap and construction phases
 
-## 15.1 Principio guía
+## 15.1 Guiding principle
 
 **"Vertical slices before horizontal layers."**
 
-No construir "toda la capa de infraestructura", después "toda la capa de dominio". Construir **el flujo más delgado posible que funcione end-to-end**, y después iterar ancheándolo.
+Don't build "all the infrastructure layer", then "all the domain layer". Build **the thinnest possible flow that works end-to-end**, then iterate widening it.
 
-## 15.2 Fases propuestas
+## 15.2 Proposed phases
 
-### Fase 0 — Validación (semanas 1-2)
+### Phase 0 — Validation (weeks 1-2)
 
-**Sin código.** El código en esta fase es negativo.
+**No code.** Code in this phase is negative.
 
-- Entrevistas con 8-10 coaches de endurance reales (Uruguay, Argentina, España).
-- Preguntas centradas en dolor, no en solución.
-- Documentar en papel: wedge refinado, propuesta de valor, willingness-to-pay.
-- Decisión go/no-go informada por los datos recolectados.
-- Reclutamiento de 2-3 coaches para beta privada.
+- Interviews with 8-10 real endurance coaches (Uruguay, Argentina, Spain).
+- Questions centered on pain, not on solution.
+- Document on paper: refined wedge, value proposition, willingness-to-pay.
+- Informed go/no-go decision based on collected data.
+- Recruitment of 2-3 coaches for private beta.
 
-**Entregable:** documento de validación con quotes, insights, pricing tentativo.
-
----
-
-### Fase 1 — Fundaciones técnicas (semanas 3-5)
-
-**Solo plomería, sin feature de producto.**
-
-- Setup del monorepo (backend + frontends).
-- Solución .NET con BuildingBlocks.
-- Esqueleto de 2 módulos: Identity + TrainingData (el mínimo para que algo funcione end-to-end).
-- CI/CD funcionando: PR checks, deploy a dev automático.
-- Docker Compose para desarrollo local.
-- Observabilidad base (Serilog, Sentry, healthchecks).
-- Dashboard del coach vacío pero autenticado.
-- PWA del atleta vacía pero autenticada.
-- Database con migrations iniciales.
-- Tests unitarios y de integración con cobertura real.
-
-**Entregable:** un atleta puede loguearse, conectar Strava (mock para testing), y ver un dashboard vacío. Desplegado en dev.
-
-**Para contar en el portfolio:** "Architected foundation: Clean Architecture, CI/CD, observability, auth — all working before writing a single business feature."
+**Deliverable:** validation document with quotes, insights, tentative pricing.
 
 ---
 
-### Fase 2 — Core de ingesta y visualización (semanas 6-9)
+### Phase 1 — Technical foundations (weeks 3-5)
 
-**Flujo vertical mínimo viable.**
+**Plumbing only, no product feature.**
 
-- Integración real con Strava (OAuth + sync de actividades).
-- Anticorruption layer para Strava con tests de contrato.
-- Outbox pattern funcionando.
-- Event bus entre módulos.
-- Dashboard del coach muestra lista de atletas con última actividad.
-- Vista del atleta en el dashboard con timeline de actividades.
-- PWA del atleta muestra sus actividades.
+- Monorepo setup (backend + frontends).
+- .NET solution with BuildingBlocks.
+- Skeleton of 2 modules: Identity + TrainingData (the minimum for something to work end-to-end).
+- CI/CD working: PR checks, automatic deploy to dev.
+- Docker Compose for local development.
+- Base observability (Serilog, Sentry, healthchecks).
+- Coach dashboard empty but authenticated.
+- Athlete PWA empty but authenticated.
+- Database with initial migrations.
+- Unit and integration tests with real coverage.
 
-**Entregable:** un coach invita a un atleta, el atleta conecta Strava, sus actividades aparecen en el dashboard del coach. Funcional end-to-end.
+**Deliverable:** an athlete can log in, connect Strava (mock for testing), and see an empty dashboard. Deployed in dev.
 
-**Beta privada 1 empieza:** 1-2 coaches de confianza prueban.
-
----
-
-### Fase 3 — Planificación (semanas 10-13)
-
-- Módulo Coaching: crear plan, ver plan, editar plan.
-- Matcheo automático actividad ↔ sesión planificada.
-- SessionExecution con feedback subjetivo del atleta en la PWA.
-- Versionado de planes funcionando.
-- Biblioteca del coach (templates básicos).
-- Notificaciones básicas (web push + email fallback).
-
-**Entregable:** flujo completo de coaching sin IA todavía. Ya es usable como "Excel premium".
-
-**Beta privada 2:** 3-5 coaches, 20-30 atletas reales.
+**Portfolio story:** "Architected foundation: Clean Architecture, CI/CD, observability, auth — all working before writing a single business feature."
 
 ---
 
-### Fase 4 — Inteligencia (semanas 14-17)
+### Phase 2 — Core ingestion and visualization (weeks 6-9)
 
-- Módulo Intelligence con cálculo de readiness nocturno (sin IA, fórmulas fisiológicas).
-- Integración con Anthropic Claude.
-- Generación semanal de sugerencias para el coach.
-- Dashboard priorizado ("estos 3 atletas necesitan atención").
-- Aplicación de sugerencias al plan (con revisión del coach).
-- Learning loop: tracking de feedback del coach.
+**Minimum viable vertical flow.**
 
-**Entregable:** el "momento mágico" del producto funciona. Coach abre dashboard el lunes y recibe sugerencias accionables.
+- Real Strava integration (OAuth + activity sync).
+- Anticorruption layer for Strava with contract tests.
+- Outbox pattern working.
+- Event bus between modules.
+- Coach dashboard shows list of athletes with last activity.
+- Athlete view on dashboard with activity timeline.
+- Athlete PWA shows their activities.
 
-**Beta pública early-access:** 10-20 coaches pagando early-bird (precio reducido).
+**Deliverable:** a coach invites an athlete, the athlete connects Strava, their activities appear on the coach's dashboard. Functional end-to-end.
 
----
-
-### Fase 5 — Pulido y expansión de integraciones (semanas 18-22)
-
-- Integración con Garmin Connect (OAuth oficial o library con plan de migración).
-- Integración con Polar (si demanda).
-- Mejoras UX basadas en feedback.
-- Performance tuning: índices, caches, queries pesadas.
-- Observabilidad de producción madura.
-- Hardening de seguridad (pentesting light).
-- Cumplimiento legal: términos, política de privacidad, DPAs.
-
-**Entregable:** producto estable para GA comercial.
+**Private beta 1 starts:** 1-2 trusted coaches test.
 
 ---
 
-### Fase 6 — Monetización (semanas 23-26)
+### Phase 3 — Planning (weeks 10-13)
 
-- Módulo Billing con Stripe.
-- Planes: starter (hasta 10 atletas), pro (hasta 30), enterprise (ilimitado + features).
-- Trials de 14 días.
-- Webhooks de Stripe.
-- Self-service de upgrade/downgrade/cancel.
-- Facturación fiscal Uruguay (inicial) + Argentina/España.
+- Coaching module: create plan, view plan, edit plan.
+- Automatic activity ↔ planned session matching.
+- SessionExecution with subjective athlete feedback in the PWA.
+- Plan versioning working.
+- Coach library (basic templates).
+- Basic notifications (web push + email fallback).
 
-**Entregable:** primeros cobros reales. Métricas de negocio reales.
+**Deliverable:** complete coaching flow without AI yet. Already usable as "premium Excel".
+
+**Private beta 2:** 3-5 coaches, 20-30 real athletes.
 
 ---
 
-### Fase 7+ — Escala y expansión (mes 7+)
+### Phase 4 — Intelligence (weeks 14-17)
 
-- Más proveedores (COROS, Suunto, Wahoo).
-- Multi-idioma (portugués BR, inglés).
-- Módulo de comunicación enriquecido (chat async, notas de audio).
-- Modelo ML propio para predicción de lesiones.
-- Features para clubes/equipos.
-- App nativa iOS/Android si demanda.
-- Marketplace de coaches (los coaches se encuentran con atletas).
+- Intelligence module with nightly readiness calculation (no AI, physiological formulas).
+- Integration with Anthropic Claude.
+- Weekly suggestion generation for the coach.
+- Prioritized dashboard ("these 3 athletes need attention").
+- Suggestion application to plan (with coach review).
+- Learning loop: tracking coach feedback.
 
-## 15.3 Definition of Done por fase
+**Deliverable:** the product's "magic moment" works. Coach opens dashboard on Monday and receives actionable suggestions.
 
-Una fase está terminada cuando:
-- Todos los tests pasan en CI.
-- Cobertura dentro de targets.
-- Deploy a staging exitoso.
-- Métricas básicas de negocio visibles en dashboard.
-- Documentación actualizada (README + este doc + ADRs).
-- Al menos un usuario real probó lo nuevo.
+**Early-access public beta:** 10-20 coaches paying early-bird (reduced price).
 
-## 15.4 Señales para no pasar a la siguiente fase
+---
 
-- Feature de la fase actual no usada por los beta testers.
-- Bugs críticos sin resolver.
-- Tech debt creciendo más rápido que el valor agregado.
-- Coaches churning sin explicación entendida.
+### Phase 5 — Polish and integration expansion (weeks 18-22)
 
-## 15.5 No-goals explícitos en año 1
+- Integration with Garmin Connect (official OAuth or library with migration plan).
+- Integration with Polar (if demand).
+- UX improvements based on feedback.
+- Performance tuning: indexes, caches, heavy queries.
+- Mature production observability.
+- Security hardening (light pentesting).
+- Legal compliance: terms, privacy policy, DPAs.
 
-Para mantener foco, estas cosas **no** se construyen:
+**Deliverable:** stable product for commercial GA.
 
-- App nativa iOS/Android.
+---
+
+### Phase 6 — Monetization (weeks 23-26)
+
+- Billing module with Stripe.
+- Plans: starter (up to 10 athletes), pro (up to 30), enterprise (unlimited + features).
+- 14-day trials.
+- Stripe webhooks.
+- Self-service upgrade/downgrade/cancel.
+- Tax billing Uruguay (initial) + Argentina/Spain.
+
+**Deliverable:** first real charges. Real business metrics.
+
+---
+
+### Phase 7+ — Scale and expansion (month 7+)
+
+- More providers (COROS, Suunto, Wahoo).
+- Multi-language (Brazilian Portuguese, Spanish).
+- Enriched communication module (async chat, audio notes).
+- Own ML model for injury prediction.
+- Features for clubs/teams.
+- Native iOS/Android app if demand.
+- Coach marketplace (coaches find athletes).
+
+## 15.3 Definition of Done per phase
+
+A phase is done when:
+- All tests pass in CI.
+- Coverage within targets.
+- Deploy to staging successful.
+- Basic business metrics visible in dashboard.
+- Documentation updated (README + this doc + ADRs).
+- At least one real user tested the new features.
+
+## 15.4 Signals for not moving to the next phase
+
+- Feature from current phase not used by beta testers.
+- Critical bugs unresolved.
+- Tech debt growing faster than added value.
+- Coaches churning without understood reason.
+
+## 15.5 Explicit non-goals in year 1
+
+To maintain focus, these things are **not** built:
+
+- Native iOS/Android app.
 - Video analysis / computer vision.
-- Nutrición / meal planning.
-- Social feed / comunidad.
+- Nutrition / meal planning.
+- Social feed / community.
 - Marketplace.
-- Soporte multi-deporte fuera de endurance (fuerza, team sports).
-- Onboarding self-service masivo (todo es invite-only en año 1).
+- Multi-sport support outside endurance (strength, team sports).
+- Mass self-service onboarding (everything is invite-only in year 1).
 
 ---
 
-## Apéndice A — Glosario
+## Appendix A — Glossary
 
-| Término | Definición |
-|---------|-----------|
-| **Coach** | Usuario primario pagante. Entrenador profesional gestionando atletas remotos. |
-| **Atleta** | Usuario consumidor. Persona que ejecuta los planes del coach. |
-| **Tenant** | Ámbito de aislamiento. Un coach (o una organización) = un tenant. |
-| **Plan de entrenamiento** | Estructura temporal de sesiones asignadas a un atleta. |
-| **Sesión planificada** | Sesión que el coach prescribió. |
-| **Sesión ejecutada** | Lo que el atleta realmente hizo, derivado de una actividad. |
-| **Actividad** | Registro de un entrenamiento desde un wearable. |
-| **Readiness** | Score diario de preparación del atleta para entrenar. |
-| **TSS / CTL / ATL / TSB** | Training Stress Score / Chronic / Acute Training Load / Training Stress Balance. Métricas estándar de carga. |
-| **HRV** | Heart Rate Variability. Variabilidad de frecuencia cardíaca, indicador de recuperación. |
-| **Sugerencia** | Recomendación generada por IA para que el coach evalúe. Nunca se aplica sola. |
-| **Bounded context** | Subdominio con lenguaje y modelo propio (DDD). |
-| **Agregado** | Cluster de entidades con una raíz que garantiza invariantes (DDD). |
-| **Outbox pattern** | Patrón para consistencia entre DB y eventos publicados. |
-| **ACL** | Anticorruption Layer. Capa que traduce modelos externos a modelo interno. |
+| Term | Definition |
+|------|-----------|
+| **Coach** | Primary paying user. Professional trainer managing athletes remotely. |
+| **Athlete** | Consumer user. Person who executes the coach's plans. |
+| **Tenant** | Isolation scope. One coach (or organization) = one tenant. |
+| **Training plan** | Temporal structure of sessions assigned to an athlete. |
+| **Planned session** | Session the coach prescribed. |
+| **Executed session** | What the athlete actually did, derived from an activity. |
+| **Activity** | Record of a workout from a wearable. |
+| **Readiness** | Daily athlete preparedness score for training. |
+| **TSS / CTL / ATL / TSB** | Training Stress Score / Chronic / Acute Training Load / Training Stress Balance. Standard load metrics. |
+| **HRV** | Heart Rate Variability. Heart rate variability, recovery indicator. |
+| **Suggestion** | AI-generated recommendation for the coach to evaluate. Never applied alone. |
+| **Bounded context** | Subdomain with its own language and model (DDD). |
+| **Aggregate** | Cluster of entities with a root that guarantees invariants (DDD). |
+| **Outbox pattern** | Pattern for consistency between DB and published events. |
+| **ACL** | Anticorruption Layer. Layer that translates external models to internal model. |
 
-## Apéndice B — Referencias técnicas recomendadas
+## Appendix B — Recommended technical references
 
-**DDD y arquitectura:**
+**DDD and architecture:**
 - "Implementing Domain-Driven Design" — Vaughn Vernon.
 - "Domain-Driven Design Distilled" — Vaughn Vernon.
 - "Learning Domain-Driven Design" — Vlad Khononov.
@@ -1788,27 +1788,27 @@ Para mantener foco, estas cosas **no** se construyen:
 
 **Clean Architecture:**
 - "Clean Architecture" — Robert C. Martin.
-- ".NET Microservices: Architecture for Containerized .NET Applications" — Microsoft (libro gratuito).
+- ".NET Microservices: Architecture for Containerized .NET Applications" — Microsoft (free book).
 
-**Fisiología del deporte (crítico para el dominio):**
+**Sports physiology (critical for the domain):**
 - "The Science of Running" — Steve Magness.
 - "Training and Racing with a Power Meter" — Hunter Allen, Andrew Coggan.
 - "Faster Road Racing" — Pete Pfitzinger.
 
-**LLMs en producción:**
+**LLMs in production:**
 - "Designing Machine Learning Systems" — Chip Huyen.
-- Documentación de Anthropic sobre prompt engineering y structured outputs.
+- Anthropic documentation on prompt engineering and structured outputs.
 
-## Apéndice C — Próximos pasos inmediatos tras leer este documento
+## Appendix C — Immediate next steps after reading this document
 
-1. Crear repositorio vacío con este documento como `/docs/ARCHITECTURE.md`.
-2. Abrir `/docs/adr/` y empezar a registrar ADRs (primer ADR: "Por qué monolito modular").
-3. Iniciar Fase 0: agendar 3 entrevistas con coaches para esta semana.
-4. En paralelo: setup del monorepo mínimo (paso 1 de Fase 1) para calentar motores.
-5. Elegir nombre placeholder y comprar dominio barato (~15 USD/año) para no bloquearse con branding.
+1. Create empty repository with this document as `/docs/ARCHITECTURE.md`.
+2. Open `/docs/adr/` and start registering ADRs (first ADR: "Why modular monolith").
+3. Start Phase 0: schedule 3 interviews with coaches for this week.
+4. In parallel: setup minimum monorepo (step 1 of Phase 1) to warm up.
+5. Choose placeholder name and buy cheap domain (~15 USD/year) to avoid blocking on branding.
 
 ---
 
-**Fin del documento.**
+**End of document.**
 
-*Este es un documento vivo. Cada decisión importante se refleja acá o en un ADR asociado. Si algo cambia en el producto o en el dominio, acá se actualiza primero.*
+*This is a living document. Every important decision is reflected here or in an associated ADR. If something changes in the product or the domain, this is updated first.*

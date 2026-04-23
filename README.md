@@ -1,181 +1,181 @@
 # AthleteOS
 
-> Plataforma SaaS de coaching inteligente para deportes de endurance.
-> Work in progress. Nombre de trabajo, sujeto a cambios.
+> Intelligent coaching SaaS platform for endurance sports.
+> Work in progress. Working name, subject to change.
 
-## Qué es esto
+## What is this
 
-Plataforma B2B que ayuda a coaches de running, ciclismo, triatlón y natación a gestionar atletas a distancia con asistencia de inteligencia artificial. Ingiere datos de wearables (Strava, Garmin, Polar), los analiza continuamente, y presenta al coach un dashboard priorizado con sugerencias accionables que el coach aprueba, modifica o rechaza.
+B2B platform that helps running, cycling, triathlon and swimming coaches manage athletes remotely with AI assistance. Ingests data from wearables (Strava, Garmin, Polar), continuously analyzes it, and presents the coach with a prioritized dashboard with actionable suggestions that the coach approves, modifies or rejects.
 
-**Usuario principal:** el coach. El atleta usa la app como consumidor, no como cliente pagante.
+**Primary user:** the coach. The athlete uses the app as a consumer, not as a paying customer.
 
-**Estado actual:** Fase 1 — Fundaciones técnicas. Sin features de producto todavía.
+**Current status:** Phase 1 — Technical foundations. No product features yet.
 
-## Documentación
+## Documentation
 
-Toda la documentación técnica vive en el repo:
+All technical documentation lives in the repo:
 
-| Archivo | Qué contiene |
-|---------|--------------|
-| [`CLAUDE.md`](./CLAUDE.md) | Briefing operativo para agentes de IA (Claude Code). |
-| [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) | Documento de arquitectura completo, 15 niveles. |
-| [`docs/adr/`](./docs/adr/) | Architecture Decision Records — decisiones formales. |
-| [`specs/`](./specs/) | Specs de features (Spec-Driven Development). |
+| File | Contents |
+|------|----------|
+| [`CLAUDE.md`](./CLAUDE.md) | Operational briefing for AI agents (Claude Code). |
+| [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) | Full architecture document, 15 levels. |
+| [`docs/adr/`](./docs/adr/) | Architecture Decision Records — formal decisions. |
+| [`specs/`](./specs/) | Feature specs (Spec-Driven Development). |
 
-**Por dónde empezar:**
+**Where to start:**
 
-- Si sos un humano nuevo en el proyecto: leé este README, después `docs/ARCHITECTURE.md` niveles 1-5.
-- Si sos un agente de IA: leé `CLAUDE.md`. Te redirige a lo que necesitás.
-- Si venís a contribuir: leé [CONTRIBUTING.md](./CONTRIBUTING.md) (por escribir).
+- If you're a human new to the project: read this README, then `docs/ARCHITECTURE.md` levels 1-5.
+- If you're an AI agent: read `CLAUDE.md`. It redirects you to what you need.
+- If you're coming to contribute: read [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-## Stack técnico (resumen)
+## Tech stack (summary)
 
 **Backend:** C# / .NET 8 + ASP.NET Core + EF Core + PostgreSQL + TimescaleDB + Redis.
 **Frontend:** React + TypeScript + Vite + TanStack + Tailwind.
-**IA:** Anthropic Claude.
-**Infra:** Docker + GitHub Actions + Railway/Fly.io (MVP) → AWS (escala).
+**AI:** Anthropic Claude.
+**Infra:** Docker + GitHub Actions + Railway/Fly.io (MVP) → AWS (scale).
 
-Detalle completo en `docs/ARCHITECTURE.md` nivel 13.
+Full detail in `docs/ARCHITECTURE.md` level 13.
 
-## Requisitos para desarrollo local
+## Local dev requirements
 
-- **.NET 8 SDK** — [descargar](https://dotnet.microsoft.com/download/dotnet/8.0)
-- **Node.js 20+ y pnpm 9+** — recomendado via [Volta](https://volta.sh/) o [fnm](https://github.com/Schniz/fnm)
-- **Docker Desktop** (o Docker Engine + Compose plugin en Linux)
+- **.NET 8 SDK** — [download](https://dotnet.microsoft.com/download/dotnet/8.0)
+- **Node.js 20+ and pnpm 9+** — recommended via [Volta](https://volta.sh/) or [fnm](https://github.com/Schniz/fnm)
+- **Docker Desktop** (or Docker Engine + Compose plugin on Linux)
 - **Git**
-- Editor de código: VS Code + C# Dev Kit (gratis), Rider, o similar
+- Code editor: VS Code + C# Dev Kit (free), Rider, or similar
 
-## Setup local
+## Local setup
 
-### 1. Cloná el repo
+### 1. Clone the repo
 
 ```bash
-git clone <url-del-repo>
+git clone <repo-url>
 cd athleteos
 ```
 
-### 2. Copiá el archivo de variables de entorno
+### 2. Copy the environment variables file
 
 ```bash
 cp .env.example .env
 ```
 
-Editá `.env` si necesitás personalizar algo. Para desarrollo local, los defaults deberían funcionar.
+Edit `.env` if you need to customize anything. For local development, defaults should work.
 
-### 3. Levantá los servicios de infraestructura
+### 3. Start infrastructure services
 
 ```bash
 docker compose up -d
 ```
 
-Esto levanta PostgreSQL (con TimescaleDB), Redis y un MailHog local para testing de emails. Verificá con:
+This starts PostgreSQL (with TimescaleDB), Redis and a local MailHog for email testing. Verify with:
 
 ```bash
 docker compose ps
 ```
 
-### 4. Aplicá las migraciones de la base de datos
+### 4. Apply database migrations
 
 ```bash
-# (Disponible cuando exista el Bloque 2)
+# (Available when Block 2 exists)
 dotnet run --project src/Bootstrap/ApiHost -- migrate
 ```
 
-### 5. Corré la API
+### 5. Run the API
 
 ```bash
-# (Disponible cuando exista el Bloque 2)
+# (Available when Block 2 exists)
 dotnet run --project src/Bootstrap/ApiHost
 ```
 
-La API queda corriendo en `http://localhost:5000`. Swagger UI en `http://localhost:5000/swagger`.
+The API runs at `http://localhost:5000`. Swagger UI at `http://localhost:5000/swagger`.
 
-### 6. (Opcional) Corré los frontends
+### 6. (Optional) Run the frontends
 
 ```bash
-# (Disponible cuando exista el Bloque 4)
+# (Available when Block 4 exists)
 cd frontends
 pnpm install
 pnpm dev
 ```
 
-El dashboard del coach queda en `http://localhost:5173`, la PWA del atleta en `http://localhost:5174`.
+The coach dashboard runs at `http://localhost:5173`, the athlete PWA at `http://localhost:5174`.
 
-## Estructura del repo
+## Repo structure
 
 ```
 athleteos/
-├── CLAUDE.md                    Briefing para agentes de IA
-├── README.md                    Este archivo
-├── .env.example                 Template de variables de entorno
+├── CLAUDE.md                    AI agent briefing
+├── README.md                    This file
+├── .env.example                 Environment variables template
 ├── .gitignore
-├── .editorconfig                Convenciones de edición
-├── docker-compose.yml           Servicios de infraestructura local
+├── .editorconfig                Editing conventions
+├── docker-compose.yml           Local infrastructure services
 ├── docs/
-│   ├── ARCHITECTURE.md          Arquitectura (15 niveles)
-│   └── adr/                     Decisiones arquitectónicas
-├── specs/                       Specs de features
-├── src/                         Código del backend (.NET)
+│   ├── ARCHITECTURE.md          Architecture (15 levels)
+│   └── adr/                     Architecture decisions
+├── specs/                       Feature specs
+├── src/                         Backend code (.NET)
 │   ├── BuildingBlocks/
 │   ├── Modules/
 │   ├── Bootstrap/
 │   └── Workers/
-├── frontends/                   Monorepo de frontends (por crear)
+├── frontends/                   Frontend monorepo (to be created)
 │   ├── apps/
 │   └── packages/
-├── tests/                       Tests del backend
+├── tests/                       Backend tests
 └── .github/
     └── workflows/               CI/CD (GitHub Actions)
 ```
 
-## Cómo correr los tests
+## How to run tests
 
 ```bash
-# Backend completo
+# Full backend
 dotnet test
 
-# Solo unit tests
+# Unit tests only
 dotnet test --filter Category=Unit
 
-# Solo un módulo
+# Single module only
 dotnet test tests/Modules/Coaching.UnitTests
 
-# Frontend (cuando exista)
+# Frontend (when it exists)
 cd frontends && pnpm test
 ```
 
-## Comandos útiles del día a día
+## Daily commands
 
-| Comando | Qué hace |
-|---------|----------|
-| `docker compose up -d` | Levanta infra local |
-| `docker compose down` | Detiene infra local |
-| `docker compose logs -f postgres` | Logs de PostgreSQL |
-| `dotnet build` | Compila la solución |
-| `dotnet test` | Corre todos los tests |
-| `dotnet format` | Formatea el código |
-| `pnpm dev` | Arranca frontends en modo dev |
+| Command | What it does |
+|---------|-------------|
+| `docker compose up -d` | Start local infra |
+| `docker compose down` | Stop local infra |
+| `docker compose logs -f postgres` | PostgreSQL logs |
+| `dotnet build` | Build the solution |
+| `dotnet test` | Run all tests |
+| `dotnet format` | Format code |
+| `pnpm dev` | Start frontends in dev mode |
 
-## Convenciones
+## Conventions
 
-- **Commits:** Conventional Commits en español. Ej: `feat(coaching): agregar ajuste de semana`.
-- **Branches:** Gitflow adaptado. `main` es prod, `develop` es dev, features en `feature/*`.
-- **Código:** inglés siempre. Comentarios y docs en español o inglés consistente.
-- **Tests:** obligatorios para nuevo código en Domain y Application.
+- **Commits:** Conventional Commits in English. E.g.: `feat(coaching): add week adjustment`.
+- **Branches:** Adapted Gitflow. `main` is prod, `develop` is dev, features on `feature/*`.
+- **Code:** English always. Comments and docs in English.
+- **Tests:** mandatory for new code in Domain and Application.
 
-## Reglas importantes
+## Important rules
 
-1. **Nunca commitear secretos.** Usamos `.env.local` (en `.gitignore`) y vault en cloud.
-2. **Nunca mergear directo a `main` ni a `develop`.** Siempre vía PR.
-3. **Features nuevas requieren spec antes de código** (ver `docs/adr/0002-sdd-sobre-ddd.md`).
-4. **Cambios arquitectónicos requieren ADR.**
+1. **Never commit secrets.** Use `.env.local` (in `.gitignore`) and vault in cloud.
+2. **Never merge directly to `main` or `develop`.** Always via PR.
+3. **New features require a spec before code** (see `docs/adr/0002-sdd-sobre-ddd.md`).
+4. **Architectural changes require an ADR.**
 
-## Soporte y contacto
+## Support and contact
 
-Proyecto en fase temprana, mantenido por [Felipe](https://github.com/<tu-usuario>).
+Early-stage project, maintained by [Felipe](https://github.com/<your-username>).
 
-Para bugs, issues o propuestas: abrí un issue en este repo.
+For bugs, issues or proposals: open an issue in this repo.
 
-## Licencia
+## License
 
-Por definir. Hasta tener decisión formal, el código es propietario y no se permite redistribución.
+To be defined. Until a formal decision is made, the code is proprietary and redistribution is not permitted.
