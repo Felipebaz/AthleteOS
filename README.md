@@ -30,7 +30,7 @@ All technical documentation lives in the repo:
 
 ## Tech stack (summary)
 
-**Backend:** C# / .NET 8 + ASP.NET Core + EF Core + PostgreSQL + TimescaleDB + Redis.
+**Backend:** C# / .NET 10 + ASP.NET Core + EF Core + PostgreSQL + TimescaleDB + Redis.
 **Frontend:** React + TypeScript + Vite + TanStack + Tailwind.
 **AI:** Anthropic Claude.
 **Infra:** Docker + GitHub Actions + Railway/Fly.io (MVP) → AWS (scale).
