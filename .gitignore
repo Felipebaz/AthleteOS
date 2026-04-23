@@ -28,15 +28,8 @@
 _ReSharper*/
 *.[Rr]e[Ss]harper
 
-# Rider — ignorar estado personal, permitir config de proyecto
-.idea/workspace.xml
-.idea/tasks.xml
-.idea/dictionaries/
-.idea/shelf/
-.idea/**/usage.statistics.xml
-.idea/**/dynamic.xml
-.idea/**/uiDesigner.xml
-.idea.*/
+# Rider — ignore all IDE state; track only shared run configurations if needed
+.idea/
 *.iml
 
 # Test results
@@ -234,5 +227,6 @@ TestResults/
 
 # JetBrains Rider specific — ya cubierto arriba
 
-# Claude Code workspace
+# Claude Code workspace and AI memory
 .claude/
+memory/
