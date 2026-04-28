@@ -1,74 +1,86 @@
 # AthleteOS
 
-> Intelligent coaching SaaS platform for endurance sports.
+> Intelligent coaching SaaS platform for endurance sports with an AI assistant for coaches.
 > Work in progress. Working name, subject to change.
 
-## What is this
+## What this is
 
-B2B platform that helps running, cycling, triathlon and swimming coaches manage athletes remotely with AI assistance. Ingests data from wearables (Strava, Garmin, Polar), continuously analyzes it, and presents the coach with a prioritized dashboard with actionable suggestions that the coach approves, modifies or rejects.
+A B2B platform that helps running, cycling, triathlon and swimming coaches manage athletes remotely. The coach's assistant is the differentiating feature: a chat interface scoped to each athlete's data that helps the coach analyze training, draft plan adjustments, and answer questions like *"how is Juan doing this week?"*. The coach is always in the loop — the AI suggests, the coach approves.
 
-**Primary user:** the coach. The athlete uses the app as a consumer, not as a paying customer.
+**Primary user (paying):** the coach.
+**Consumer user (free):** the athlete.
 
-**Current status:** Phase 1 — Technical foundations. No product features yet.
+**Status:** Phase 0 — pre-development. Stack was just changed from .NET to TypeScript (see [`docs/adr/0003-stack-change-to-typescript.md`](./docs/adr/0003-stack-change-to-typescript.md)).
 
 ## Documentation
 
 All technical documentation lives in the repo:
 
 | File | Contents |
-|------|----------|
+| --- | --- |
 | [`CLAUDE.md`](./CLAUDE.md) | Operational briefing for AI agents (Claude Code). |
-| [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) | Full architecture document, 15 levels. |
-| [`docs/adr/`](./docs/adr/) | Architecture Decision Records — formal decisions. |
-| [`specs/`](./specs/) | Feature specs (Spec-Driven Development). |
+| [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) | Buildable architecture (TypeScript edition). 7 sections. |
+| [`docs/VISION.md`](./docs/VISION.md) | Long-term north-star architecture. Reference, not plan. |
+| [`docs/adr/`](./docs/adr) | Architecture Decision Records — formal decisions. |
+| [`docs/MIGRATION_NOTES.md`](./docs/MIGRATION_NOTES.md) | Notes on the .NET → TypeScript migration. |
+| [`specs/`](./specs) | Feature specs (Spec-Driven Development). |
 
 **Where to start:**
 
-- If you're a human new to the project: read this README, then `docs/ARCHITECTURE.md` levels 1-5.
+- If you're new to the project: read this README, then `docs/ARCHITECTURE.md` sections 1-3.
 - If you're an AI agent: read `CLAUDE.md`. It redirects you to what you need.
-- If you're coming to contribute: read [CONTRIBUTING.md](./CONTRIBUTING.md).
+- If you're contributing: read `CONTRIBUTING.md`.
 
 ## Tech stack (summary)
 
-**Backend:** C# / .NET 10 + ASP.NET Core + EF Core + PostgreSQL + TimescaleDB + Redis.
-**Frontend:** React + TypeScript + Vite + TanStack + Tailwind.
-**AI:** Anthropic Claude.
+**Backend:** Node.js 20 + TypeScript + Fastify + Prisma + PostgreSQL + Redis + BullMQ.
+**Frontend:** React + Vite + TypeScript + TanStack Router + TanStack Query + Tailwind + shadcn/ui.
+**AI:** Anthropic Claude (direct SDK, no LangChain).
+**APIs:** REST with OpenAPI auto-generated from Zod schemas.
 **Infra:** Docker + GitHub Actions + Railway/Fly.io (MVP) → AWS (scale).
+**Monorepo:** pnpm workspaces + Turborepo.
 
-Full detail in `docs/ARCHITECTURE.md` level 13.
+Full detail in [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) section 4.
 
 ## Local dev requirements
 
-- **.NET 8 SDK** — [download](https://dotnet.microsoft.com/download/dotnet/8.0)
-- **Node.js 20+ and pnpm 9+** — recommended via [Volta](https://volta.sh/) or [fnm](https://github.com/Schniz/fnm)
+- **Node.js 20 LTS** — recommended via [Volta](https://volta.sh/) or [fnm](https://github.com/Schniz/fnm)
+- **pnpm 9+** — `npm install -g pnpm` or via Volta
 - **Docker Desktop** (or Docker Engine + Compose plugin on Linux)
 - **Git**
-- Code editor: VS Code + C# Dev Kit (free), Rider, or similar
+- Editor: VS Code with the recommended extensions (`.vscode/extensions.json`)
 
 ## Local setup
 
-### 1. Clone the repo
+### 1. Clone and install
 
 ```bash
 git clone <repo-url>
 cd athleteos
+pnpm install
 ```
 
-### 2. Copy the environment variables file
+### 2. Environment variables
 
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env` if you need to customize anything. For local development, defaults should work.
+Defaults work for local development. Edit only if you need to override.
 
-### 3. Start infrastructure services
+### 3. Start infrastructure
 
 ```bash
 docker compose up -d
 ```
 
-This starts PostgreSQL (with TimescaleDB), Redis and a local MailHog for email testing. Verify with:
+This starts:
+
+- PostgreSQL 16 on `localhost:5432`
+- Redis 7 on `localhost:6379`
+- Mailhog (local SMTP catcher) on `localhost:8025` (web UI)
+
+Verify:
 
 ```bash
 docker compose ps
@@ -77,105 +89,111 @@ docker compose ps
 ### 4. Apply database migrations
 
 ```bash
-# (Available when Block 2 exists)
-dotnet run --project src/Bootstrap/ApiHost -- migrate
+# Will be available once the api app exists (Phase 1).
+pnpm --filter api db:migrate
 ```
 
-### 5. Run the API
+### 5. Run everything in dev mode
 
 ```bash
-# (Available when Block 2 exists)
-dotnet run --project src/Bootstrap/ApiHost
-```
-
-The API runs at `http://localhost:5000`. Swagger UI at `http://localhost:5000/swagger`.
-
-### 6. (Optional) Run the frontends
-
-```bash
-# (Available when Block 4 exists)
-cd frontends
-pnpm install
 pnpm dev
 ```
 
-The coach dashboard runs at `http://localhost:5173`, the athlete PWA at `http://localhost:5174`.
+This starts (in parallel, via Turborepo):
+
+- API at `http://localhost:3000`
+- Coach dashboard at `http://localhost:5173`
+- Athlete PWA at `http://localhost:5174`
+- Swagger UI at `http://localhost:3000/docs`
+
+Or run them individually:
+
+```bash
+pnpm --filter api dev
+pnpm --filter web-coach dev
+pnpm --filter web-athlete dev
+```
 
 ## Repo structure
 
 ```
 athleteos/
-├── CLAUDE.md                    AI agent briefing
 ├── README.md                    This file
-├── .env.example                 Environment variables template
-├── .gitignore
-├── .editorconfig                Editing conventions
-├── docker-compose.yml           Local infrastructure services
+├── CLAUDE.md                    AI agent briefing
+├── CONTRIBUTING.md              Contribution guide
+├── .env.example
+├── .nvmrc                       Node version pin
+├── .editorconfig
+├── docker-compose.yml           Local infra (Postgres, Redis, Mailhog)
+├── package.json                 Root workspace
+├── pnpm-workspace.yaml
+├── turbo.json
+├── tsconfig.base.json           Shared TS config
+│
+├── apps/
+│   ├── api/                     Fastify backend
+│   │   └── src/
+│   │       ├── main.ts          Composition root
+│   │       ├── modules/         iam, training-data, coaching
+│   │       └── shared/          Cross-cutting (logging, errors, db client)
+│   ├── web-coach/               Coach dashboard (React)
+│   └── web-athlete/             Athlete PWA (React)
+│
+├── packages/
+│   ├── shared-types/            Types shared across apps
+│   ├── api-client/              Generated from OpenAPI spec
+│   └── eslint-config/           Shared lint rules
+│
 ├── docs/
-│   ├── ARCHITECTURE.md          Architecture (15 levels)
-│   └── adr/                     Architecture decisions
-├── specs/                       Feature specs
-├── src/                         Backend code (.NET)
-│   ├── BuildingBlocks/
-│   ├── Modules/
-│   ├── Bootstrap/
-│   └── Workers/
-├── frontends/                   Frontend monorepo (to be created)
-│   ├── apps/
-│   └── packages/
-├── tests/                       Backend tests
+│   ├── ARCHITECTURE.md          Buildable plan
+│   ├── VISION.md                Long-term north star
+│   ├── MIGRATION_NOTES.md       .NET → TypeScript migration
+│   └── adr/                     Architecture Decision Records
+│
+├── specs/                       Feature specs (SDD)
+│
 └── .github/
-    └── workflows/               CI/CD (GitHub Actions)
+    └── workflows/               CI/CD pipelines
 ```
 
-## How to run tests
-
-```bash
-# Full backend
-dotnet test
-
-# Unit tests only
-dotnet test --filter Category=Unit
-
-# Single module only
-dotnet test tests/Modules/Coaching.UnitTests
-
-# Frontend (when it exists)
-cd frontends && pnpm test
-```
-
-## Daily commands
+## Useful commands
 
 | Command | What it does |
-|---------|-------------|
+| --- | --- |
+| `pnpm install` | Install all workspace dependencies |
+| `pnpm dev` | Start all apps in dev mode (API + frontends) |
+| `pnpm build` | Build everything via Turborepo |
+| `pnpm lint` | Lint all packages |
+| `pnpm test` | Run all tests |
+| `pnpm test:e2e` | Run Playwright end-to-end tests |
+| `pnpm format` | Format with Prettier |
+| `pnpm typecheck` | Run `tsc --noEmit` across the monorepo |
 | `docker compose up -d` | Start local infra |
 | `docker compose down` | Stop local infra |
-| `docker compose logs -f postgres` | PostgreSQL logs |
-| `dotnet build` | Build the solution |
-| `dotnet test` | Run all tests |
-| `dotnet format` | Format code |
-| `pnpm dev` | Start frontends in dev mode |
+| `docker compose logs -f postgres` | Postgres logs |
+| `pnpm --filter api db:migrate` | Apply Prisma migrations |
+| `pnpm --filter api db:studio` | Open Prisma Studio |
 
 ## Conventions
 
-- **Commits:** Conventional Commits in English. E.g.: `feat(coaching): add week adjustment`.
-- **Branches:** Adapted Gitflow. `main` is prod, `develop` is dev, features on `feature/*`.
-- **Code:** English always. Comments and docs in English.
-- **Tests:** mandatory for new code in Domain and Application.
+- **Commits:** [Conventional Commits](https://www.conventionalcommits.org/) in English. Examples: `feat(coaching): add session matching`, `fix(api): correct token refresh path`, `docs(adr): add ADR-0006`.
+- **Branches:** Adapted Gitflow. `main` = prod. `develop` = integration. Features on `feature/<short-name>`.
+- **Code:** English everywhere — variable names, comments, commit messages, docs.
+- **Tests:** Mandatory for new code in `domain/` and `application/` layers.
 
-## Important rules
+## Rules
 
-1. **Never commit secrets.** Use `.env.local` (in `.gitignore`) and vault in cloud.
-2. **Never merge directly to `main` or `develop`.** Always via PR.
-3. **New features require a spec before code** (see `docs/adr/0002-sdd-sobre-ddd.md`).
-4. **Architectural changes require an ADR.**
+1. **Never commit secrets.** Use `.env.local` (in `.gitignore`) locally; cloud secrets manager in deployed environments.
+2. **Never push directly to `main` or `develop`.** Always via PR.
+3. **New features require a spec** in `specs/` before code (see [ADR-0002](./docs/adr/0002-sdd-sobre-ddd.md)).
+4. **Architectural changes require an ADR** in `docs/adr/`.
+5. **No LangChain. No Hugging Face in MVP.** See [ADR-0005](./docs/adr/0005-direct-anthropic-sdk-no-langchain.md).
+6. **REST only. No GraphQL, no tRPC.** See [ADR-0004](./docs/adr/0004-rest-over-graphql-trpc.md).
 
-## Support and contact
+## Maintainer
 
-Early-stage project, maintained by [Felipe](https://github.com/<your-username>).
-
-For bugs, issues or proposals: open an issue in this repo.
+Felipe — early-stage solo project. For bugs, issues, or proposals: open a GitHub issue.
 
 ## License
 
-To be defined. Until a formal decision is made, the code is proprietary and redistribution is not permitted.
+To be defined. Until a formal decision, the code is proprietary; redistribution not permitted.

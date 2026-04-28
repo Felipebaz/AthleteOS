@@ -3,7 +3,8 @@
 - **Date:** 2026-04-22
 - **Status:** Accepted
 - **Deciders:** Felipe
-- **Related technical context:** `docs/ARCHITECTURE.md` levels 5 (Bounded Contexts), 6 (Deployment view), 10 (Backend modules).
+- **Related technical context:** `docs/ARCHITECTURE.md` Section 3 (Modules and boundaries).
+- **Note:** The decision body below references .NET projects and EF Core. The **architectural decision** (modular monolith, module isolation, communication via contracts/events) remains valid. The implementation language changed to TypeScript per ADR-0003. References to `.csproj`, `SaveChanges`, or `NetArchTest` are superseded; the equivalent enforcement mechanisms in TypeScript are `eslint-plugin-boundaries` and Vitest architecture tests.
 
 ## Context and problem
 

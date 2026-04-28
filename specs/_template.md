@@ -18,7 +18,7 @@
 
 ## Domain context
 
-- **Bounded context:** (Identity | AthleteProfile | TrainingData | Coaching | Intelligence | Communication | Billing)
+- **Bounded context:** (iam | training-data | coaching)
 - **Affected aggregate(s):** name of the aggregate root that is created or modified
 - **Business capabilities covered:** references to `docs/ARCHITECTURE.md` level 2 (e.g. RF-PLAN-04)
 - **Related end-to-end flow:** if applicable, reference to ARCHITECTURE level 12

@@ -130,30 +130,22 @@ And if during implementation something was discovered that refines the model, up
 specs/
 ├── README.md                                        ← this file
 ├── _template.md                                     ← template to copy
-├── identity/
+├── iam/                                             ← Identity & Access module
 │   ├── 001-coach-registration.md
 │   └── 002-athlete-invitation.md
-├── athlete-profile/
-│   ├── 001-create-athlete-profile.md
-│   └── 002-update-training-zones.md
-├── training-data/
+├── training-data/                                   ← Training Data module
 │   ├── 001-connect-strava.md
-│   ├── 002-ingest-activity.md
-│   └── 003-disconnect-provider.md
-├── coaching/
-│   ├── 001-create-training-plan.md
-│   ├── 002-adjust-training-week.md
-│   └── 003-record-session-feedback.md
-├── intelligence/
-│   ├── 001-calculate-readiness.md
-│   └── 002-generate-weekly-suggestions.md
-└── communication/
-    └── 001-send-plan-adjustment-notification.md
+│   ├── 002-ingest-activity-strava.md
+│   └── 003-upload-fit-file.md
+└── coaching/                                        ← Coaching module (plans + AI assistant)
+    ├── 001-create-training-plan.md
+    ├── 002-adjust-training-week.md
+    └── 003-ask-coach-assistant.md
 ```
 
 File names: `NNN-kebab-case-description.md`.
 
-One subdirectory per bounded context, aligned with the backend modules.
+One subdirectory per module: `iam/`, `training-data/`, `coaching/`. Aligned with `apps/api/src/modules/`.
 
 ---
 
