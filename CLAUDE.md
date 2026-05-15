@@ -485,6 +485,41 @@ I'm **Felipe**. Software engineering student at ORT (Uruguay), with frontend exp
 
 ---
 
+## Available Claude Code skills
+
+Skills installed globally. Invoke with `/skill-name` in the prompt.
+
+| Skill | Purpose |
+|-------|---------|
+| `tdd` | Red-green-refactor loop for features and bug fixes |
+| `prototype` | Throwaway prototype to validate design before committing |
+| `diagnose` | Disciplined debug loop: reproduce → minimise → hypothesise → fix |
+| `simplify` | Review changed code for reuse, quality, efficiency |
+| `review` | Pull request review |
+| `security-review` | Security review of pending branch changes |
+| `init` | Initialize a new CLAUDE.md |
+| `grill-me` | Stress-test a plan or design via relentless interview |
+| `grill-with-docs` | Same as grill-me but challenges against existing domain model |
+| `to-prd` | Turn conversation context into a PRD on the issue tracker |
+| `to-issues` | Break plan/PRD into independently-grabbable issues |
+| `triage` | Triage issues through a state machine |
+| `improve-codebase-architecture` | Find refactoring/architecture opportunities |
+| `write-a-skill` | Create new agent skills |
+| `claude-api` | Build/debug/optimize Anthropic SDK apps, prompt caching, tool use |
+| `find-skills` | Discover and install new skills |
+| `update-config` | Configure Claude Code settings.json (hooks, permissions, env vars) |
+| `keybindings-help` | Customize keyboard shortcuts |
+| `fewer-permission-prompts` | Add allowlist to reduce permission prompts |
+| `loop` | Run a prompt/command on recurring interval |
+| `schedule` | Schedule remote agents on cron |
+| `caveman` | Ultra-compressed communication mode (~75% token reduction) |
+| `caveman:caveman-review` | Compressed PR review comments |
+| `caveman:caveman-commit` | Compressed commit message generator |
+| `caveman:compress` | Compress memory files to caveman format |
+| `caveman:caveman-help` | Quick-reference card for all caveman modes |
+
+---
+
 ## Updating this document
 
 This file evolves. When it changes:
