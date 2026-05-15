@@ -1,0 +1,771 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AthleteOS — Coach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=Inter:wght@400;450;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#13110E; --bg-2:#17150F; --surface:#1C1915; --surface-2:#221E18;
+    --border:#252117; --border-2:#2E2A20;
+    --text:#EDE8E0; --text-dim:#9C8F7A; --text-muted:#5A5248;
+    --gold:#C49A3A; --gold-2:#D8AE48; --gold-soft:rgba(196,154,58,0.14);
+    --run:#72A864; --bike:#9B7EC8; --swim:#5B9AC2;
+    --warn:#D87B5F;
+    --headline:'Barlow Condensed',sans-serif;
+    --body:'Inter',system-ui,sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;height:100%;background:var(--bg);color:var(--text);font-family:var(--body);-webkit-font-smoothing:antialiased}
+  button{font-family:inherit;cursor:default;border:0;background:transparent;color:inherit}
+  a{color:inherit;text-decoration:none}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:#2a2620;border-radius:5px;border:2px solid var(--bg)}
+  ::-webkit-scrollbar-thumb:hover{background:#3a3528}
+
+  .h{font-family:var(--headline);text-transform:uppercase;font-weight:700;letter-spacing:0.005em;line-height:1}
+  .num{font-family:var(--headline);font-weight:700;font-variant-numeric:tabular-nums}
+  .mono{font-family:var(--mono);font-feature-settings:"tnum" 1}
+  .eyebrow{font-size:10.5px;letter-spacing:0.16em;text-transform:uppercase;color:var(--text-muted);font-weight:600}
+
+  /* App shell */
+  .app{display:grid;grid-template-columns: 264px 1fr 360px;height:100vh;min-height:720px}
+  @media (max-width:1280px){ .app{grid-template-columns: 240px 1fr 340px} }
+  @media (max-width:1100px){ .app{grid-template-columns: 220px 1fr} .chat-col{display:none} }
+  @media (max-width:780px){ .app{grid-template-columns: 1fr} .side{display:none} }
+
+  /* SIDEBAR */
+  .side{
+    background:var(--bg-2);border-right:1px solid var(--border);
+    display:flex;flex-direction:column;min-height:0;
+  }
+  .side-top{padding:18px 18px 14px;border-bottom:1px solid var(--border)}
+  .logo{display:flex;align-items:center;gap:10px;font-family:var(--headline);font-weight:800;letter-spacing:0.02em;font-size:18px;text-transform:uppercase}
+  .logo-mark{width:20px;height:20px;border-radius:5px;background:linear-gradient(135deg,var(--gold),#8E6E22);position:relative;overflow:hidden}
+  .logo-mark::before{content:"";position:absolute;inset:3px;border-radius:3px;background:var(--bg-2)}
+  .logo-mark::after{content:"";position:absolute;left:5px;right:5px;top:8px;height:2.5px;background:var(--gold);border-radius:1px;box-shadow:0 4px 0 var(--run)}
+  .coach-card{display:flex;align-items:center;gap:10px;margin-top:14px;padding:8px;border-radius:8px;background:var(--surface)}
+  .coach-card .av{width:30px;height:30px;border-radius:50%;background:var(--gold);color:#1A1408;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px}
+  .coach-card .nm{font-size:12.5px;font-weight:600;line-height:1.2}
+  .coach-card .ro{font-size:10.5px;color:var(--text-muted);letter-spacing:0.06em;margin-top:2px}
+
+  .side-nav{padding:12px 10px}
+  .side-nav .grp{padding:14px 10px 6px;font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:var(--text-muted);font-weight:600;display:flex;align-items:center;justify-content:space-between}
+  .side-nav .grp .ct{color:var(--text-muted);font-family:var(--mono);font-size:10px}
+  .nav-item{
+    display:flex;align-items:center;gap:11px;padding:8px 10px;border-radius:6px;
+    font-size:13px;color:var(--text-dim);font-weight:500;
+    transition:background .12s,color .12s;
+  }
+  .nav-item:hover{background:rgba(255,255,255,0.03);color:var(--text)}
+  .nav-item.active{background:rgba(196,154,58,0.10);color:var(--text);box-shadow:inset 2px 0 0 var(--gold)}
+  .nav-item .ic{width:14px;height:14px;border-radius:3px;background:#2a2620;flex:0 0 auto}
+  .nav-item.active .ic{background:var(--gold)}
+  .nav-item .b{margin-left:auto;font-size:10px;background:#221E18;padding:2px 6px;border-radius:99px;color:var(--text-muted);letter-spacing:0.04em;font-weight:600}
+  .nav-item.active .b{background:rgba(196,154,58,0.18);color:var(--gold)}
+
+  /* Athletes list (in sidebar) */
+  .ath-list{flex:1;overflow-y:auto;padding:4px 10px 14px;min-height:0}
+  .ath-list .search{
+    margin:6px 4px 8px;padding:8px 10px;background:var(--surface);border:1px solid var(--border);
+    border-radius:7px;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted);
+  }
+  .ath-list .search .k{margin-left:auto;font-family:var(--mono);font-size:10px;background:#2a2620;padding:2px 5px;border-radius:4px;color:var(--text-dim)}
+  .ath-item{
+    display:grid;grid-template-columns:24px 1fr auto;gap:10px;align-items:center;
+    padding:7px 8px;border-radius:6px;cursor:default;transition:background .12s;
+  }
+  .ath-item:hover{background:rgba(255,255,255,0.03)}
+  .ath-item.selected{background:rgba(196,154,58,0.08)}
+  .ath-item .av{width:24px;height:24px;border-radius:50%;background:#2a2620;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--text);border:1px solid var(--border-2);position:relative}
+  .ath-item .av .dot{position:absolute;right:-1px;bottom:-1px;width:8px;height:8px;border-radius:50%;border:2px solid var(--bg-2)}
+  .dot.run{background:var(--run)} .dot.bike{background:var(--bike)} .dot.swim{background:var(--swim)} .dot.tri{background:var(--gold)}
+  .ath-item .nm{font-size:12.5px;font-weight:500;color:var(--text);line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ath-item .nm .sub{display:block;font-size:10px;color:var(--text-muted);margin-top:2px;font-weight:500;letter-spacing:0.04em}
+  .ath-item .flag{width:14px;height:14px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;font-family:var(--headline)}
+  .ath-item .flag.warn{background:rgba(196,154,58,0.18);color:var(--gold)}
+  .ath-item .flag.alert{background:rgba(216,123,95,0.15);color:var(--warn)}
+  .ath-item .flag.ok{background:transparent;color:var(--text-muted)}
+
+  .side-foot{padding:10px;border-top:1px solid var(--border);display:flex;gap:6px}
+  .side-foot button{
+    flex:1;padding:9px;font-size:11.5px;font-weight:600;letter-spacing:0.04em;
+    border-radius:6px;background:var(--surface);color:var(--text-dim);
+  }
+  .side-foot button:hover{background:var(--surface-2);color:var(--text)}
+  .side-foot button.add{background:var(--gold);color:#1A1408}
+  .side-foot button.add:hover{background:var(--gold-2)}
+
+  /* MAIN */
+  .main{overflow-y:auto;min-height:0;padding:24px 28px 40px}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+  .crumbs{font-size:12px;color:var(--text-muted);letter-spacing:0.06em}
+  .crumbs b{color:var(--text-dim);font-weight:600}
+  .topbar-r{display:flex;align-items:center;gap:14px;font-size:12px;color:var(--text-dim)}
+  .topbar-r .week{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:5px 6px}
+  .topbar-r .week button{padding:4px 10px;border-radius:4px;font-size:11.5px;color:var(--text-dim);font-weight:600;letter-spacing:0.04em}
+  .topbar-r .week button.act{background:var(--surface-2);color:var(--text)}
+  .topbar-r .ic-btn{width:30px;height:30px;border-radius:7px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--text-dim)}
+  .topbar-r .ic-btn:hover{color:var(--text)}
+
+  /* Greeting */
+  .greet{margin-bottom:22px}
+  .greet h1{font-family:var(--headline);font-weight:700;font-size:34px;letter-spacing:0.005em;text-transform:uppercase;margin:6px 0 6px;line-height:1}
+  .greet h1 .gold{color:var(--gold)}
+  .greet .sub{font-size:13.5px;color:var(--text-dim)}
+  .greet .sub b{color:var(--text)}
+
+  /* Stat strip */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
+  @media (max-width:900px){ .stats{grid-template-columns:repeat(2,1fr)} }
+  .stat{
+    background:var(--surface);border:1px solid var(--border);border-radius:10px;
+    padding:14px 16px;
+  }
+  .stat .l{font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-muted);font-weight:600}
+  .stat .v{font-family:var(--headline);font-weight:700;font-size:30px;letter-spacing:-0.005em;margin-top:6px;line-height:1}
+  .stat .v .u{font-size:14px;color:var(--text-dim);margin-left:3px}
+  .stat .d{font-size:11px;font-weight:600;margin-top:6px;color:var(--text-muted)}
+  .stat .d.up{color:var(--run)} .stat .d.down{color:var(--warn)} .stat .d.warn{color:var(--gold)}
+  .stat.accent{border-color:rgba(196,154,58,0.30);background:linear-gradient(180deg, rgba(196,154,58,0.06), var(--surface))}
+
+  /* Roster card */
+  .card{
+    background:var(--surface);border:1px solid var(--border);border-radius:12px;
+    margin-bottom:20px;overflow:hidden;
+  }
+  .card-hd{
+    padding:16px 20px;display:flex;align-items:center;justify-content:space-between;
+    border-bottom:1px solid var(--border);
+  }
+  .card-hd h3{font-family:var(--headline);font-weight:700;font-size:18px;letter-spacing:0.005em;text-transform:uppercase;margin:0}
+  .card-hd .meta{font-size:11px;color:var(--text-muted);letter-spacing:0.08em;margin-top:3px}
+  .card-hd .ctrl{display:flex;gap:6px;align-items:center}
+  .filter-pill{
+    display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:99px;
+    background:var(--bg-2);border:1px solid var(--border);font-size:11.5px;color:var(--text-dim);
+    font-weight:500;cursor:default;transition:all .12s;
+  }
+  .filter-pill:hover{color:var(--text);border-color:var(--border-2)}
+  .filter-pill.act{color:var(--text);border-color:var(--border-2);background:var(--surface-2)}
+  .filter-pill .sw{width:8px;height:8px;border-radius:2px;background:#3a3528}
+  .filter-pill[data-sport="run"] .sw{background:var(--run)}
+  .filter-pill[data-sport="bike"] .sw{background:var(--bike)}
+  .filter-pill[data-sport="swim"] .sw{background:var(--swim)}
+  .filter-pill[data-sport="all"] .sw{background:linear-gradient(90deg,var(--run) 33%, var(--bike) 33%, var(--bike) 66%, var(--swim) 66%)}
+
+  /* Roster table */
+  .roster-row{
+    display:grid;grid-template-columns: 32px 1.5fr 1fr 2fr 70px 60px 28px;
+    gap:14px;align-items:center;
+    padding:12px 20px;border-top:1px solid var(--border);
+    transition:background .12s;cursor:default;
+  }
+  .roster-row:hover{background:rgba(255,255,255,0.018)}
+  .roster-row.hidden{display:none}
+  .roster-row .av{width:32px;height:32px;border-radius:50%;background:#2a2620;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--text);border:1px solid var(--border-2);position:relative}
+  .roster-row .av .dot{position:absolute;right:-1px;bottom:-1px;width:9px;height:9px;border-radius:50%;border:2px solid var(--surface)}
+  .roster-row .name{font-size:13.5px;font-weight:600;color:var(--text);line-height:1.2;overflow:hidden;text-overflow:ellipsis}
+  .roster-row .name .sub{display:block;font-size:11px;color:var(--text-muted);font-weight:500;margin-top:2px;letter-spacing:0.04em}
+  .roster-row .sport{display:inline-flex;align-items:center;gap:8px;font-size:11.5px;color:var(--text-dim);font-weight:500}
+  .roster-row .sport .sw{width:8px;height:8px;border-radius:2px}
+  .sw.run{background:var(--run)} .sw.bike{background:var(--bike)} .sw.swim{background:var(--swim)} .sw.tri{background:linear-gradient(90deg,var(--run) 33%, var(--bike) 33%, var(--bike) 66%, var(--swim) 66%)}
+
+  .load{display:flex;align-items:flex-end;gap:3px;height:36px}
+  .load .day{flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:1px;height:100%;border-radius:2px;overflow:hidden;background:rgba(255,255,255,0.012)}
+  .load .day .seg{width:100%;border-radius:1px}
+  .load .day .seg.run{background:var(--run)}
+  .load .day .seg.bike{background:var(--bike)}
+  .load .day .seg.swim{background:var(--swim)}
+  .load .day.pr{position:relative;outline:1px solid var(--gold);outline-offset:1px;border-radius:2px}
+  .load .day.pr::after{content:"PR";position:absolute;top:-15px;left:50%;transform:translateX(-50%);font-family:var(--headline);font-weight:700;font-size:9px;color:var(--gold);letter-spacing:0.1em}
+  .load .day.rest{background:repeating-linear-gradient(45deg, transparent 0 3px, rgba(255,255,255,0.03) 3px 4px)}
+  .load .day.miss{background:repeating-linear-gradient(45deg, transparent 0 3px, rgba(216,123,95,0.20) 3px 4px)}
+
+  .ctl{font-family:var(--headline);font-weight:700;font-size:17px;text-align:right;font-variant-numeric:tabular-nums;line-height:1}
+  .ctl .delta{display:block;font-size:9.5px;font-weight:600;letter-spacing:0.06em;margin-top:3px}
+  .delta.up{color:var(--run)} .delta.down{color:var(--warn)} .delta.flat{color:var(--text-muted)}
+
+  .adh{font-family:var(--headline);font-weight:700;font-size:14px;text-align:right;line-height:1}
+  .adh .b{display:block;height:3px;background:#2a2620;border-radius:2px;margin-top:6px;overflow:hidden}
+  .adh .b i{display:block;height:100%;background:var(--run);border-radius:2px}
+  .adh.med .b i{background:var(--gold)}
+  .adh.low .b i{background:var(--warn)}
+
+  .flag{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--headline);font-weight:800;font-size:12px}
+  .flag.warn{background:rgba(196,154,58,0.15);color:var(--gold)}
+  .flag.ok{background:rgba(114,168,100,0.10);color:var(--run)}
+  .flag.alert{background:rgba(216,123,95,0.14);color:var(--warn)}
+
+  /* Suggestions */
+  .sugg-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;padding:18px}
+  @media (max-width:900px){ .sugg-grid{grid-template-columns:1fr} }
+  .sugg{
+    background:var(--bg-2);border:1px solid var(--border);border-radius:10px;
+    padding:14px 16px;
+  }
+  .sugg .top{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px}
+  .sugg .av{width:28px;height:28px;border-radius:50%;background:#2a2620;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:700;color:var(--text);border:1px solid var(--border-2);flex:0 0 auto}
+  .sugg .who{font-size:13px;font-weight:600;color:var(--text)}
+  .sugg .why{font-size:11px;color:var(--text-muted);letter-spacing:0.04em;margin-top:2px}
+  .sugg .pri{margin-left:auto;font-family:var(--headline);font-weight:700;font-size:11px;letter-spacing:0.08em;padding:3px 7px;border-radius:99px}
+  .pri.high{background:rgba(216,123,95,0.14);color:var(--warn)}
+  .pri.med{background:rgba(196,154,58,0.14);color:var(--gold)}
+  .pri.low{background:rgba(114,168,100,0.10);color:var(--run)}
+  .sugg .body{font-size:13px;line-height:1.5;color:var(--text-dim);margin:8px 0 12px}
+  .sugg .body em{font-style:normal;color:var(--gold);font-weight:600}
+  .sugg .body s{color:var(--text-muted);text-decoration-color:rgba(216,123,95,0.5)}
+  .sugg .acts{display:flex;gap:6px}
+  .sugg .acts button{padding:7px 12px;font-size:11.5px;font-weight:600;letter-spacing:0.02em;border-radius:6px;background:var(--surface-2);color:var(--text-dim);border:1px solid var(--border-2)}
+  .sugg .acts button.go{background:var(--gold);color:#1A1408;border-color:var(--gold)}
+  .sugg .acts button.go:hover{background:var(--gold-2)}
+  .sugg .acts button:hover{color:var(--text)}
+  .sugg .cites{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+  .cite{display:inline-flex;align-items:center;gap:4px;padding:3px 7px;border-radius:99px;background:var(--surface);border:1px solid var(--border);font-size:10.5px;color:var(--text-dim)}
+  .cite .n{font-family:var(--mono);color:var(--gold);font-size:10px}
+
+  /* CHAT COL */
+  .chat-col{
+    background:var(--bg-2);border-left:1px solid var(--border);
+    display:flex;flex-direction:column;min-height:0;
+  }
+  .chat-hd{padding:16px 18px;border-bottom:1px solid var(--border)}
+  .chat-hd .row{display:flex;align-items:center;gap:10px}
+  .chat-hd .ai-mk{width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,var(--gold),#8E6E22);display:flex;align-items:center;justify-content:center;color:#1A1408;font-family:var(--headline);font-weight:800;font-size:13px}
+  .chat-hd .nm{font-size:13px;font-weight:600;color:var(--text)}
+  .chat-hd .stat-line{font-size:11px;color:var(--text-muted);margin-top:2px;letter-spacing:0.04em}
+  .chat-hd .stat-line .d{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--run);margin-right:6px;box-shadow:0 0 0 3px rgba(114,168,100,0.18);transform:translateY(-1px)}
+  .chat-hd .menu{margin-left:auto;width:26px;height:26px;border-radius:6px;color:var(--text-muted);display:flex;align-items:center;justify-content:center;font-size:14px}
+
+  .chat-body{flex:1;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:14px;min-height:0}
+  .msg{display:flex;gap:10px;align-items:flex-start;max-width:96%}
+  .msg .av{flex:0 0 auto;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;border:1px solid var(--border-2)}
+  .msg.coach .av{background:#2a2620;color:var(--text)}
+  .msg.ai .av{background:var(--gold);color:#1A1408}
+  .msg .bub{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:10px 12px;font-size:12.5px;line-height:1.5;color:var(--text)}
+  .msg.coach{align-self:flex-end;flex-direction:row-reverse}
+  .msg.coach .bub{background:transparent;border-style:dashed;border-radius:9px 9px 2px 9px}
+  .msg.ai{align-self:flex-start}
+  .msg.ai .bub{border-radius:2px 9px 9px 9px}
+  .msg .bub b{color:var(--gold);font-weight:600}
+  .msg .bub .chips{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}
+  .msg .bub .chip{font-size:10.5px;padding:3px 7px;border-radius:99px;background:var(--bg-2);border:1px solid var(--border);color:var(--text-dim)}
+  .msg .bub .chip .n{font-family:var(--mono);color:var(--gold);font-size:10px;margin-right:3px}
+
+  .quick-asks{padding:0 18px 10px;display:flex;flex-direction:column;gap:6px}
+  .quick-asks .lbl{font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-muted);font-weight:600;margin-bottom:2px}
+  .quick-asks .qa{
+    text-align:left;padding:8px 10px;font-size:12px;color:var(--text-dim);
+    background:var(--surface);border:1px solid var(--border);border-radius:7px;
+    transition:all .12s;display:flex;align-items:center;gap:8px;
+  }
+  .quick-asks .qa:hover{color:var(--text);border-color:var(--border-2);background:var(--surface-2)}
+  .quick-asks .qa::before{content:"";display:block;width:5px;height:5px;border-radius:50%;background:var(--gold);flex:0 0 auto}
+
+  .chat-input{
+    padding:14px 18px 18px;border-top:1px solid var(--border);
+  }
+  .chat-input .box{
+    background:var(--surface);border:1px solid var(--border-2);border-radius:10px;
+    padding:10px 12px;display:flex;align-items:flex-end;gap:8px;
+    transition:border-color .15s;
+  }
+  .chat-input .box:focus-within{border-color:var(--gold)}
+  .chat-input textarea{
+    flex:1;background:transparent;border:0;color:var(--text);font:inherit;font-size:13px;
+    resize:none;outline:0;line-height:1.5;max-height:90px;min-height:20px;
+  }
+  .chat-input textarea::placeholder{color:var(--text-muted)}
+  .chat-input .send{
+    width:30px;height:30px;border-radius:7px;background:var(--gold);color:#1A1408;
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex:0 0 auto;
+  }
+  .chat-input .send:hover{background:var(--gold-2)}
+  .chat-input .send:disabled{opacity:0.4}
+  .chat-input .meta{display:flex;justify-content:space-between;margin-top:8px;font-size:10.5px;color:var(--text-muted);letter-spacing:0.04em}
+  .chat-input .meta .k{font-family:var(--mono);background:#2a2620;padding:1px 5px;border-radius:3px;color:var(--text-dim)}
+
+  .typing{display:inline-flex;gap:4px;align-items:center;height:18px}
+  .typing span{width:5px;height:5px;border-radius:50%;background:var(--text-muted);animation:typ 1.2s infinite ease-in-out}
+  .typing span:nth-child(2){animation-delay:.2s}
+  .typing span:nth-child(3){animation-delay:.4s}
+  @keyframes typ{0%,80%,100%{opacity:.3;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
+
+  .ret{margin-top:24px;font-size:11.5px;color:var(--text-muted);letter-spacing:0.04em;display:flex;align-items:center;gap:8px}
+  .ret a{color:var(--gold);font-weight:600}
+  .ret a:hover{color:var(--gold-2)}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ============== SIDEBAR ============== -->
+  <aside class="side">
+    <div class="side-top">
+      <a class="logo" href="#"><span class="logo-mark"></span> AthleteOS</a>
+      <div class="coach-card">
+        <div class="av">MR</div>
+        <div>
+          <div class="nm">Marc Roca</div>
+          <div class="ro">HEAD COACH · 17 / 25</div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="side-nav">
+      <div class="grp"><span>General</span></div>
+      <a class="nav-item active"><span class="ic"></span>Roster <span class="b">17</span></a>
+      <a class="nav-item"><span class="ic"></span>Calendar</a>
+      <a class="nav-item"><span class="ic"></span>Plans <span class="b">8</span></a>
+      <a class="nav-item"><span class="ic"></span>Inbox <span class="b">3</span></a>
+      <a class="nav-item"><span class="ic"></span>Reports</a>
+      <a class="nav-item"><span class="ic"></span>Settings</a>
+    </nav>
+
+    <div class="side-nav" style="padding-top:0">
+      <div class="grp"><span>Athletes</span><span class="ct" id="ath-count">17</span></div>
+    </div>
+
+    <div class="ath-list" id="ath-list">
+      <div class="search">
+        <span>⌕</span><span>Search athletes…</span>
+        <span class="k">⌘K</span>
+      </div>
+      <!-- populated by JS -->
+    </div>
+
+    <div class="side-foot">
+      <button>Invite</button>
+      <button class="add">+ Add athlete</button>
+    </div>
+  </aside>
+
+  <!-- ============== MAIN ============== -->
+  <main class="main">
+    <div class="topbar">
+      <div class="crumbs">Roster · <b>Week 18 · May 4–10</b></div>
+      <div class="topbar-r">
+        <div class="week">
+          <button>‹</button>
+          <button>W17</button>
+          <button class="act">W18</button>
+          <button>W19</button>
+          <button>›</button>
+        </div>
+        <button class="ic-btn">⌕</button>
+        <button class="ic-btn">🔔</button>
+      </div>
+    </div>
+
+    <div class="greet">
+      <div class="eyebrow">Tuesday · May 6, 2026</div>
+      <h1>Good morning, Marc.<br/><span class="gold">3 athletes</span> need a look today.</h1>
+      <div class="sub">17 active athletes · 12 sessions completed yesterday · <b>1 PR</b> · 2 missed sessions</div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats">
+      <div class="stat accent">
+        <div class="l">Attention needed</div>
+        <div class="v">3<span class="u">/17</span></div>
+        <div class="d warn">2 high · 1 medium</div>
+      </div>
+      <div class="stat">
+        <div class="l">Roster TSS · this week</div>
+        <div class="v">996</div>
+        <div class="d up">+12% vs. last week</div>
+      </div>
+      <div class="stat">
+        <div class="l">Plan adherence · avg.</div>
+        <div class="v">87<span class="u">%</span></div>
+        <div class="d up">+3% vs. 4-wk avg</div>
+      </div>
+      <div class="stat">
+        <div class="l">PRs · last 7 days</div>
+        <div class="v">1</div>
+        <div class="d">Juan M. · 5K threshold</div>
+      </div>
+    </div>
+
+    <!-- Roster -->
+    <div class="card">
+      <div class="card-hd">
+        <div>
+          <h3>Active roster</h3>
+          <div class="meta">SORTED BY ATTENTION NEEDED · WEEK 18</div>
+        </div>
+        <div class="ctrl">
+          <button class="filter-pill act" data-sport="all"><span class="sw"></span>All</button>
+          <button class="filter-pill" data-sport="run"><span class="sw"></span>Run</button>
+          <button class="filter-pill" data-sport="bike"><span class="sw"></span>Bike</button>
+          <button class="filter-pill" data-sport="swim"><span class="sw"></span>Swim</button>
+        </div>
+      </div>
+      <div id="roster"></div>
+    </div>
+
+    <!-- Top suggestions -->
+    <div class="card">
+      <div class="card-hd">
+        <div>
+          <h3>Top AI suggestions <span style="color:var(--gold);font-size:13px;margin-left:8px">·  4 today</span></h3>
+          <div class="meta">RANKED BY URGENCY · ASSISTANT NEVER CHANGES PLANS UNTIL YOU APPROVE</div>
+        </div>
+        <div class="ctrl">
+          <button class="filter-pill act">Today</button>
+          <button class="filter-pill">This week</button>
+          <button class="filter-pill">Resolved</button>
+        </div>
+      </div>
+      <div class="sugg-grid">
+
+        <div class="sugg">
+          <div class="top">
+            <div class="av">JM</div>
+            <div>
+              <div class="who">Juan Morales</div>
+              <div class="why">RAMP RATE +18% · ELEVATED RHR</div>
+            </div>
+            <span class="pri high">HIGH</span>
+          </div>
+          <div class="body">
+            Strong week + PR Thu, but recovery markers slipping. Suggest: convert <s>Tue · 2×20 Z4 bike</s> → <em>Tue · easy Z2 spin · 60min</em>. Hold Saturday long run.
+          </div>
+          <div class="cites">
+            <span class="cite"><span class="n">[1]</span>5K PR Thu</span>
+            <span class="cite"><span class="n">[2]</span>RHR +4 bpm</span>
+            <span class="cite"><span class="n">[3]</span>HRV 4-wk trend</span>
+          </div>
+          <div class="acts">
+            <button class="go">Approve</button>
+            <button>Edit plan</button>
+            <button>Dismiss</button>
+          </div>
+        </div>
+
+        <div class="sugg">
+          <div class="top">
+            <div class="av">TM</div>
+            <div>
+              <div class="who">Tomás Méndez</div>
+              <div class="why">2 MISSED SESSIONS · NO MESSAGE</div>
+            </div>
+            <span class="pri high">HIGH</span>
+          </div>
+          <div class="body">
+            Tomás missed Mon swim and Tue intervals — no log, no note. Adherence dropped to 64%. Suggest: <em>send a check-in message</em> and reschedule Wed swim earlier in the day.
+          </div>
+          <div class="cites">
+            <span class="cite"><span class="n">[1]</span>Plan vs. actual</span>
+            <span class="cite"><span class="n">[2]</span>Last log: Sun</span>
+          </div>
+          <div class="acts">
+            <button class="go">Send check-in</button>
+            <button>View athlete</button>
+            <button>Dismiss</button>
+          </div>
+        </div>
+
+        <div class="sugg">
+          <div class="top">
+            <div class="av">EV</div>
+            <div>
+              <div class="who">Elena Vega</div>
+              <div class="why">TAPER ON TRACK · OPTIMIZE</div>
+            </div>
+            <span class="pri med">MED</span>
+          </div>
+          <div class="body">
+            Half marathon Sun. Taper looks clean — TSB +14. Suggest: <em>add 4×100m strides Fri AM</em> to keep neuromuscular sharpness without adding fatigue.
+          </div>
+          <div class="cites">
+            <span class="cite"><span class="n">[1]</span>TSB curve</span>
+            <span class="cite"><span class="n">[2]</span>Race in 5d</span>
+          </div>
+          <div class="acts">
+            <button class="go">Approve</button>
+            <button>Edit plan</button>
+            <button>Dismiss</button>
+          </div>
+        </div>
+
+        <div class="sugg">
+          <div class="top">
+            <div class="av">DR</div>
+            <div>
+              <div class="who">Dani Rovira</div>
+              <div class="why">RACE WEEK · TAPER BIKE</div>
+            </div>
+            <span class="pri low">LOW</span>
+          </div>
+          <div class="body">
+            Gravel race Sat. CTL drop −6 is intentional and on plan. <em>No change needed</em> — flagging only because race is in 4 days. Confirm fueling note sent?
+          </div>
+          <div class="cites">
+            <span class="cite"><span class="n">[1]</span>Plan adherence 96%</span>
+            <span class="cite"><span class="n">[2]</span>Race in 4d</span>
+          </div>
+          <div class="acts">
+            <button class="go">Mark reviewed</button>
+            <button>Open athlete</button>
+            <button>Dismiss</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="ret">Want the full landing? <a href="AthleteOS Landing.html">→ View public site</a></div>
+  </main>
+
+  <!-- ============== CHAT COL ============== -->
+  <aside class="chat-col">
+    <div class="chat-hd">
+      <div class="row">
+        <div class="ai-mk">A</div>
+        <div>
+          <div class="nm">AthleteOS Assistant</div>
+          <div class="stat-line"><span class="d"></span>Reading week 18 · ready</div>
+        </div>
+        <button class="menu">⋯</button>
+      </div>
+    </div>
+
+    <div class="chat-body" id="chat-body">
+      <div class="msg ai">
+        <div class="av">A</div>
+        <div class="bub">
+          Morning, Marc. I've reviewed last night's sync — <b>3 athletes flagged</b>, 1 race week, 1 PR. Top of the list is Juan: ramp rate up 18% but a PR Thursday. Want me to open his week?
+        </div>
+      </div>
+      <div class="msg coach">
+        <div class="av">M</div>
+        <div class="bub">How is Juan doing this week?</div>
+      </div>
+      <div class="msg ai">
+        <div class="av">A</div>
+        <div class="bub">
+          Juan had a <b>strong week</b> — 5K threshold PR Thu, 684 TSS (+18%). But RHR is up 4 bpm and sleep is down 32 min. I'd ease Tuesday's Z4 bike to Z2.
+          <div class="chips">
+            <span class="chip"><span class="n">[1]</span>5K PR</span>
+            <span class="chip"><span class="n">[2]</span>RHR +4</span>
+            <span class="chip"><span class="n">[3]</span>Sleep</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="quick-asks">
+      <div class="lbl">Suggested asks</div>
+      <button class="qa" data-q="Who's at risk of overtraining?">Who's at risk of overtraining?</button>
+      <button class="qa" data-q="Compare Sara's last 4 weeks">Compare Sara's last 4 weeks</button>
+      <button class="qa" data-q="Draft a check-in for Tomás">Draft a check-in for Tomás</button>
+    </div>
+
+    <div class="chat-input">
+      <div class="box">
+        <textarea id="chat-text" rows="1" placeholder="Ask the assistant — e.g. how is Sara this week?"></textarea>
+        <button class="send" id="chat-send" disabled>↑</button>
+      </div>
+      <div class="meta">
+        <span>AI suggests · Coach decides</span>
+        <span><span class="k">⏎</span> to send</span>
+      </div>
+    </div>
+  </aside>
+
+</div>
+
+<script>
+/* ----------------- DATA ----------------- */
+const ATHLETES = [
+  { id:'jm', name:'Juan Morales',    sub:'Triathlon · 10w to A-race',  sport:'tri',  initials:'JM', ctl:86, dCtl:'+4',  dTone:'up',   adh:94, week:[ {seg:'run',h:38},{seg:'bike',h:62},'rest',{seg:'swim',h:48},{seg:'run',h:96,pr:true},{seg:'bike',h:54},{seg:'run',h:30} ], flag:'warn' },
+  { id:'tm', name:'Tomás Méndez',    sub:'Open water · build',         sport:'swim', initials:'TM', ctl:58, dCtl:'flat',dTone:'flat', adh:64, week:[ 'miss','miss',{seg:'swim',h:55},'rest',{seg:'swim',h:70},{seg:'swim',h:42},'rest' ], flag:'alert' },
+  { id:'ev', name:'Elena Vega',      sub:'Half marathon · taper',      sport:'run',  initials:'EV', ctl:68, dCtl:'-9',  dTone:'down', adh:96, week:[ {seg:'run',h:36},{seg:'run',h:28},'rest',{seg:'run',h:22},{seg:'run',h:18},'rest',{seg:'run',h:14} ], flag:'warn' },
+  { id:'sk', name:'Sara Knudsen',    sub:'Marathon · base block',      sport:'run',  initials:'SK', ctl:72, dCtl:'+2',  dTone:'up',   adh:91, week:[ {seg:'run',h:42},{seg:'run',h:55},'rest',{seg:'run',h:32},{seg:'run',h:48},'rest',{seg:'run',h:78} ], flag:'ok' },
+  { id:'dr', name:'Dani Rovira',     sub:'Gravel · race week',         sport:'bike', initials:'DR', ctl:94, dCtl:'-6',  dTone:'down', adh:96, week:[ {seg:'bike',h:30},{seg:'bike',h:24},'rest',{seg:'bike',h:18},'rest',{seg:'bike',h:82},{seg:'bike',h:14} ], flag:'ok' },
+  { id:'lb', name:'Lia Bauer',       sub:'70.3 · build',                sport:'tri',  initials:'LB', ctl:78, dCtl:'+5',  dTone:'up',   adh:88, week:[ {seg:'swim',h:35},{seg:'bike',h:58},{seg:'run',h:42},'rest',{seg:'bike',h:65},{seg:'run',h:50},{seg:'swim',h:38} ], flag:'ok' },
+  { id:'rk', name:'Rohan Khan',      sub:'10K · speed block',          sport:'run',  initials:'RK', ctl:64, dCtl:'+3',  dTone:'up',   adh:85, week:[ {seg:'run',h:50},'rest',{seg:'run',h:62},{seg:'run',h:38},'rest',{seg:'run',h:72},{seg:'run',h:28} ], flag:'ok' },
+  { id:'mc', name:'Mireia Costa',    sub:'Triathlon · base',           sport:'tri',  initials:'MC', ctl:55, dCtl:'+1',  dTone:'up',   adh:82, week:[ {seg:'swim',h:42},{seg:'bike',h:48},{seg:'run',h:38},'rest',{seg:'bike',h:52},{seg:'run',h:35},{seg:'swim',h:32} ], flag:'ok' },
+  { id:'jp', name:'Jordi Puig',      sub:'Crit racing · peak',         sport:'bike', initials:'JP', ctl:88, dCtl:'+2',  dTone:'up',   adh:92, week:[ {seg:'bike',h:55},{seg:'bike',h:42},'rest',{seg:'bike',h:75},{seg:'bike',h:30},{seg:'bike',h:88},'rest' ], flag:'ok' },
+  { id:'an', name:'Anya Novak',      sub:'Marathon · build',           sport:'run',  initials:'AN', ctl:76, dCtl:'+4',  dTone:'up',   adh:89, week:[ {seg:'run',h:48},{seg:'run',h:40},'rest',{seg:'run',h:52},{seg:'run',h:35},'rest',{seg:'run',h:82} ], flag:'ok' },
+  { id:'cb', name:'Cleo Brandt',     sub:'Pool · 1500m',                sport:'swim', initials:'CB', ctl:48, dCtl:'+2',  dTone:'up',   adh:90, week:[ {seg:'swim',h:55},{seg:'swim',h:40},'rest',{seg:'swim',h:62},{seg:'swim',h:48},'rest',{seg:'swim',h:58} ], flag:'ok' },
+  { id:'fl', name:'Felipe Luna',     sub:'70.3 · taper',                sport:'tri',  initials:'FL', ctl:82, dCtl:'-4',  dTone:'down', adh:93, week:[ {seg:'swim',h:30},{seg:'bike',h:35},{seg:'run',h:28},'rest',{seg:'bike',h:25},{seg:'run',h:20},'rest' ], flag:'ok' },
+  { id:'mt', name:'Mei Tanaka',      sub:'Marathon · recovery',        sport:'run',  initials:'MT', ctl:60, dCtl:'-2',  dTone:'down', adh:88, week:[ {seg:'run',h:32},'rest',{seg:'run',h:38},{seg:'run',h:25},'rest',{seg:'run',h:42},{seg:'run',h:30} ], flag:'ok' },
+  { id:'oh', name:'Owen Hart',       sub:'Crit · base',                sport:'bike', initials:'OH', ctl:62, dCtl:'+3',  dTone:'up',   adh:87, week:[ {seg:'bike',h:45},{seg:'bike',h:38},'rest',{seg:'bike',h:52},{seg:'bike',h:30},{seg:'bike',h:60},'rest' ], flag:'ok' },
+  { id:'pa', name:'Priya Anand',     sub:'70.3 · build',                sport:'tri',  initials:'PA', ctl:70, dCtl:'+5',  dTone:'up',   adh:86, week:[ {seg:'swim',h:38},{seg:'bike',h:50},{seg:'run',h:40},'rest',{seg:'bike',h:55},{seg:'run',h:42},{seg:'swim',h:35} ], flag:'ok' },
+  { id:'gn', name:'Gabriel Nieto',   sub:'10K · speed',                 sport:'run',  initials:'GN', ctl:58, dCtl:'+2',  dTone:'up',   adh:80, week:[ {seg:'run',h:42},'rest',{seg:'run',h:55},{seg:'run',h:35},'rest',{seg:'run',h:65},{seg:'run',h:25} ], flag:'ok' },
+  { id:'ny', name:'Noa Yael',        sub:'Marathon · base',             sport:'run',  initials:'NY', ctl:66, dCtl:'+3',  dTone:'up',   adh:84, week:[ {seg:'run',h:44},{seg:'run',h:50},'rest',{seg:'run',h:38},{seg:'run',h:42},'rest',{seg:'run',h:70} ], flag:'ok' },
+];
+
+const SPORT_LABEL = { run:'Running', bike:'Cycling', swim:'Swimming', tri:'Triathlon' };
+
+/* ----------------- SIDEBAR LIST ----------------- */
+const athList = document.getElementById('ath-list');
+ATHLETES.forEach((a,i) => {
+  const el = document.createElement('div');
+  el.className = 'ath-item' + (i===0 ? ' selected' : '');
+  el.dataset.id = a.id;
+  el.innerHTML = `
+    <div class="av">${a.initials}<span class="dot ${a.sport}"></span></div>
+    <div class="nm">${a.name}<span class="sub">${SPORT_LABEL[a.sport]}</span></div>
+    <div class="flag ${a.flag}">${a.flag==='warn'?'!':a.flag==='alert'?'↓':''}</div>
+  `;
+  el.addEventListener('click', () => {
+    document.querySelectorAll('.ath-item').forEach(x => x.classList.remove('selected'));
+    el.classList.add('selected');
+  });
+  athList.appendChild(el);
+});
+
+/* ----------------- ROSTER ----------------- */
+const roster = document.getElementById('roster');
+// Top 5 in roster (most attention first)
+const ROSTER_VIEW = ATHLETES.slice(0, 6);
+ROSTER_VIEW.forEach(a => {
+  const days = a.week.map(d => {
+    if (d === 'rest') return '<div class="day rest"></div>';
+    if (d === 'miss') return '<div class="day miss"></div>';
+    return `<div class="day${d.pr ? ' pr' : ''}"><div class="seg ${d.seg}" style="height:${d.h}%"></div></div>`;
+  }).join('');
+
+  const adhClass = a.adh >= 90 ? '' : a.adh >= 75 ? 'med' : 'low';
+
+  const row = document.createElement('div');
+  row.className = 'roster-row';
+  row.dataset.sport = a.sport;
+  row.innerHTML = `
+    <div class="av">${a.initials}<span class="dot ${a.sport}"></span></div>
+    <div class="name">${a.name}<span class="sub">${a.sub}</span></div>
+    <div class="sport"><span class="sw ${a.sport}"></span>${SPORT_LABEL[a.sport]}</div>
+    <div class="load">${days}</div>
+    <div class="ctl">${a.ctl}<span class="delta ${a.dTone}">${a.dCtl===' flat' || a.dCtl==='flat' ? 'flat' : a.dCtl + ' CTL'}</span></div>
+    <div class="adh ${adhClass}">${a.adh}%<span class="b"><i style="width:${a.adh}%"></i></span></div>
+    <div class="flag ${a.flag}">${a.flag==='warn'?'!':a.flag==='alert'?'↓':'✓'}</div>
+  `;
+  roster.appendChild(row);
+});
+
+/* ----------------- SPORT FILTER ----------------- */
+document.querySelectorAll('.filter-pill[data-sport]').forEach(p => {
+  p.addEventListener('click', () => {
+    document.querySelectorAll('.filter-pill[data-sport]').forEach(x => x.classList.remove('act'));
+    p.classList.add('act');
+    const sport = p.dataset.sport;
+    document.querySelectorAll('.roster-row').forEach(row => {
+      const s = row.dataset.sport;
+      const show = (sport === 'all') || (s === sport) || (sport !== 'all' && s === 'tri'); // tri shows for any
+      row.classList.toggle('hidden', !show);
+    });
+  });
+});
+
+/* ----------------- WEEK NAV ----------------- */
+document.querySelectorAll('.week button').forEach(b => {
+  b.addEventListener('click', () => {
+    if (!['W17','W18','W19'].includes(b.textContent)) return;
+    document.querySelectorAll('.week button').forEach(x => x.classList.remove('act'));
+    b.classList.add('act');
+    document.querySelector('.crumbs').innerHTML = `Roster · <b>${b.textContent === 'W17' ? 'Week 17 · Apr 27–May 3' : b.textContent === 'W18' ? 'Week 18 · May 4–10' : 'Week 19 · May 11–17'}</b>`;
+  });
+});
+
+/* ----------------- CHAT ----------------- */
+const chatBody = document.getElementById('chat-body');
+const chatText = document.getElementById('chat-text');
+const chatSend = document.getElementById('chat-send');
+
+function autosize(){
+  chatText.style.height = 'auto';
+  chatText.style.height = Math.min(90, chatText.scrollHeight) + 'px';
+  chatSend.disabled = !chatText.value.trim();
+}
+chatText.addEventListener('input', autosize);
+
+function appendCoach(text){
+  const m = document.createElement('div');
+  m.className = 'msg coach';
+  m.innerHTML = `<div class="av">M</div><div class="bub"></div>`;
+  m.querySelector('.bub').textContent = text;
+  chatBody.appendChild(m);
+  chatBody.scrollTop = chatBody.scrollHeight;
+}
+
+function appendTyping(){
+  const m = document.createElement('div');
+  m.className = 'msg ai';
+  m.id = 'typing-now';
+  m.innerHTML = `<div class="av">A</div><div class="bub"><span class="typing"><span></span><span></span><span></span></span></div>`;
+  chatBody.appendChild(m);
+  chatBody.scrollTop = chatBody.scrollHeight;
+}
+
+function appendAI(html){
+  const m = document.createElement('div');
+  m.className = 'msg ai';
+  m.innerHTML = `<div class="av">A</div><div class="bub">${html}</div>`;
+  chatBody.appendChild(m);
+  chatBody.scrollTop = chatBody.scrollHeight;
+}
+
+const SCRIPTED_REPLIES = {
+  default: `Looking at the roster — <b>2 athletes</b> need a closer look this week. Want a summary of the flagged ones, or shall I dig into a specific athlete?`,
+  overtraining: `<b>Juan Morales</b> is the one to watch — ramp rate +18%, RHR up 4 bpm. Tomás missed 2 sessions but no overtraining signal there. Want the full breakdown?
+    <div class="chips"><span class="chip"><span class="n">[1]</span>HRV trend</span><span class="chip"><span class="n">[2]</span>Ramp rate</span></div>`,
+  sara: `<b>Sara Knudsen</b> — base block on track. Last 4 weeks: 248 → 290 → 312 → 340 TSS. Adherence 91%. Long run distance climbing as planned. No flags.
+    <div class="chips"><span class="chip"><span class="n">[1]</span>Plan adherence</span><span class="chip"><span class="n">[2]</span>4-wk TSS</span></div>`,
+  tomas: `Drafted: <em>"Hey Tomás — saw you missed Mon swim & Tue intervals. All good? Want to push the swim to Wed AM and skip the intervals this week?"</em> Send as-is, or edit?`
+};
+
+function aiRespond(prompt){
+  appendTyping();
+  setTimeout(() => {
+    document.getElementById('typing-now')?.remove();
+    const p = prompt.toLowerCase();
+    let reply = SCRIPTED_REPLIES.default;
+    if (p.includes('overtrain')) reply = SCRIPTED_REPLIES.overtraining;
+    else if (p.includes('sara')) reply = SCRIPTED_REPLIES.sara;
+    else if (p.includes('tomás') || p.includes('tomas') || p.includes('check-in')) reply = SCRIPTED_REPLIES.tomas;
+    appendAI(reply);
+  }, 1100 + Math.random() * 600);
+}
+
+function send(){
+  const t = chatText.value.trim();
+  if (!t) return;
+  appendCoach(t);
+  chatText.value = '';
+  autosize();
+  aiRespond(t);
+}
+chatSend.addEventListener('click', send);
+chatText.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); send(); }
+});
+document.querySelectorAll('.qa').forEach(b => {
+  b.addEventListener('click', () => {
+    chatText.value = b.dataset.q;
+    autosize();
+    send();
+  });
+});
+
+/* ----------------- ANIMATE LOAD BARS ----------------- */
+window.addEventListener('load', () => {
+  document.querySelectorAll('.roster-row .seg, .ath-item .seg').forEach((seg, i) => {
+    const target = seg.style.height;
+    seg.style.height = '0%';
+    seg.style.transition = 'height .8s cubic-bezier(.2,.7,.2,1)';
+    setTimeout(() => { seg.style.height = target; }, 100 + i*15);
+  });
+});
+</script>
+
+</body>
+</html>
